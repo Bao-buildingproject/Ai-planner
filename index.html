@@ -1921,6 +1921,151 @@ html.standalone:not(.signed-in) body::before {
   }
 }
 
+/* ---------- Reminders ---------- */
+
+.dv-add {
+  grid-template-areas: "title title" "start end" "remind remind" "btn btn";
+}
+
+.dv-add .field:nth-of-type(1) { grid-area: start; }
+.dv-add .field:nth-of-type(2) { grid-area: end; }
+.dv-add .dv-add-remind { grid-area: remind; }
+
+select.input {
+  padding-right: 12px;
+}
+
+select.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dv-remind {
+  grid-area: remind-panel;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+}
+
+.dv-remind h2 {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.dv-remind .hint {
+  font-size: 12.5px;
+}
+
+.remind-notify {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.dayplan {
+  grid-template-areas: "head" "summary" "add" "untimed" "remind-panel" "timeline";
+}
+
+@media (min-width: 900px) {
+  .dayplan {
+    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas: "head timeline" "summary timeline" "add timeline" "untimed timeline" "remind-panel timeline";
+  }
+}
+
+.tl-bell svg {
+  width: 11px;
+  height: 11px;
+  vertical-align: -1px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rem-region {
+  position: fixed;
+  /* below the top bar, so the theme and account buttons stay reachable */
+  top: calc(env(safe-area-inset-top, 0px) + 70px);
+  right: max(12px, env(safe-area-inset-right, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+  pointer-events: none;
+}
+
+.rem-region:empty {
+  display: none;
+}
+
+.rem-card {
+  display: grid;
+  gap: 4px;
+  width: min(100%, 400px);
+  padding: 14px 16px;
+  border: 1px solid var(--ink);
+  border-left: 6px solid var(--hl);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  box-shadow: var(--shadow-pop);
+  pointer-events: auto;
+  animation: toast-in var(--t-mid) var(--ease);
+}
+
+.rem-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rem-bell svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rem-title {
+  font-size: 17px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.rem-time {
+  color: var(--ink-2);
+  font: 400 13px var(--font-mono);
+}
+
+.rem-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+}
+
+.rem-more {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 12.5px;
+  pointer-events: auto;
+}
+
 </style>
 </head>
 <body>
@@ -2088,11 +2233,22 @@ html.standalone:not(.signed-in) body::before {
       <input class="input dv-add-title" id="dv-add-title" name="title" maxlength="200" aria-label="Tên việc mới">
       <div class="field"><label class="field-label" for="dv-add-start">Bắt đầu</label><input class="input" id="dv-add-start" name="start" type="time"></div>
       <div class="field"><label class="field-label" for="dv-add-end">Kết thúc</label><input class="input" id="dv-add-end" name="end" type="time"></div>
+      <div class="field dv-add-remind"><label class="field-label" for="dv-add-remind">Nhắc nhở</label><select class="input" id="dv-add-remind" name="remind"><option value="">Không nhắc</option><option value="0">Đúng giờ</option><option value="5">Trước 5 phút</option><option value="10">Trước 10 phút</option><option value="15">Trước 15 phút</option><option value="30">Trước 30 phút</option><option value="60">Trước 1 giờ</option></select></div>
       <button type="submit" class="btn btn-primary dv-add-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>Thêm</button>
     </form>
     <section class="dv-untimed" id="dv-untimed-wrap" aria-labelledby="dv-untimed-title" hidden>
       <h2 id="dv-untimed-title">Chưa có giờ</h2>
       <ul class="tasks" id="dv-untimed"></ul>
+    </section>
+    <section class="dv-remind" aria-labelledby="dv-remind-title">
+      <h2 id="dv-remind-title">Nhắc nhở</h2>
+      <label class="check-field"><input type="checkbox" id="remind-on" checked> Bật nhắc nhở</label>
+      <p class="hint" id="remind-next"></p>
+      <div class="remind-notify">
+        <button type="button" class="btn" id="notify-btn" hidden></button>
+        <p class="hint" id="notify-state"></p>
+      </div>
+      <p class="hint">Chọn “Nhắc nhở” khi thêm hoặc sửa việc có giờ. Web chỉ nhắc khi trang này đang mở, kể cả tab chạy nền. Đóng trình duyệt thì không có nhắc nhở.</p>
     </section>
     <section class="dv-timeline" aria-labelledby="dv-timeline-title">
       <h2 id="dv-timeline-title">Dòng thời gian</h2>
@@ -2129,6 +2285,11 @@ html.standalone:not(.signed-in) body::before {
         <label class="field-label" for="edit-end">Kết thúc</label>
         <input id="edit-end" class="input" name="end" type="time">
       </div>
+    </div>
+    <div class="field">
+      <label class="field-label" for="edit-remind">Nhắc nhở</label>
+      <select id="edit-remind" class="input" name="remind" aria-describedby="edit-remind-hint"><option value="">Không nhắc</option><option value="0">Đúng giờ</option><option value="5">Trước 5 phút</option><option value="10">Trước 10 phút</option><option value="15">Trước 15 phút</option><option value="30">Trước 30 phút</option><option value="60">Trước 1 giờ</option></select>
+      <span class="hint" id="edit-remind-hint">Cần có giờ bắt đầu.</span>
     </div>
     <label class="check-field"><input type="checkbox" id="edit-done" name="done"> Đã xong</label>
     <div class="dialog-actions">
@@ -2170,6 +2331,8 @@ html.standalone:not(.signed-in) body::before {
     </div>
   </div>
 </dialog>
+
+<div class="rem-region" id="rem-region"></div>
 
 <div class="toast-region" aria-live="polite" aria-atomic="true">
   <div class="toast" id="toast" hidden><p id="toast-text"></p><button type="button" id="toast-btn">Hoàn tác</button></div>
@@ -2221,12 +2384,15 @@ html.standalone:not(.signed-in) body::before {
   // ---- Data shape (unchanged from the earlier version, plus goal and end time) ----
   // one document per week: { days: { "YYYY-MM-DD": [{ id, text, time, end, done }] }, notes, goal }
   const blankWeek = () => ({ days: {}, notes: "", goal: "" });
+  const REMIND_CHOICES = [0, 5, 10, 15, 30, 60]; // minutes before the start time
+  const remindLabel = (m) => (m === 0 ? "Nhắc đúng giờ" : `Nhắc trước ${m} phút`);
   function cleanTask(t) {
     if (!t || typeof t.text !== "string" || !t.text.trim()) return null;
     const time = TIME_RE.test(t.time || "") ? t.time : "";
     let end = TIME_RE.test(t.end || "") ? t.end : "";
     if (end && (!time || toMin(end) <= toMin(time))) end = "";
-    return { id: String(t.id || uid()).slice(0, 40), text: t.text.trim().slice(0, 200), time, end, done: t.done === true };
+    const remind = time && REMIND_CHOICES.includes(t.remind) ? t.remind : null;
+    return { id: String(t.id || uid()).slice(0, 40), text: t.text.trim().slice(0, 200), time, end, done: t.done === true, ...(remind !== null ? { remind } : {}) };
   }
   function normalize(raw) {
     const w = blankWeek();
@@ -2600,6 +2766,7 @@ html.standalone:not(.signed-in) body::before {
   const S = { monday: mondayOf(nowVN().date), week: blankWeek(), prev: null, selected: nowVN().date, loading: true, now: nowVN(), theme: "system", editing: null, view: readView() };
   const ICON = {
     plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
     clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
     sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
     moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
@@ -2814,11 +2981,13 @@ html.standalone:not(.signed-in) body::before {
     row?.querySelector(".check")?.focus();
   }
 
-  function add(date, text, time, end = "") {
+  function add(date, text, time, end = "", remind = null) {
     const list = (S.week.days[date] ||= []);
     if (list.length >= MAX_PER_DAY) { showToast(`Mỗi ngày có tối đa ${MAX_PER_DAY} việc.`, { error: true }); return false; }
     const start = TIME_RE.test(time) ? time : "";
-    list.push({ id: uid(), text: text.slice(0, 200), time: start, end: start && TIME_RE.test(end) && toMin(end) > toMin(start) ? end : "", done: false });
+    const task = { id: uid(), text: text.slice(0, 200), time: start, end: start && TIME_RE.test(end) && toMin(end) > toMin(start) ? end : "", done: false };
+    if (start && REMIND_CHOICES.includes(remind)) task.remind = remind;
+    list.push(task);
     commit();
     return true;
   }
@@ -2840,6 +3009,11 @@ html.standalone:not(.signed-in) body::before {
   }
 
   // ---- Edit dialog ----
+  /** A reminder needs a start time: without one the choice is greyed out. */
+  function syncRemindField(startInput, select) {
+    select.disabled = !startInput.value;
+    if (!startInput.value) select.value = "";
+  }
   const dialog = $("edit-dialog");
   let returnFocus = null;
   function openEdit(date, id) {
@@ -2852,6 +3026,8 @@ html.standalone:not(.signed-in) body::before {
     $("edit-start").value = found.t.time;
     $("edit-end").value = found.t.end;
     $("edit-done").checked = found.t.done;
+    $("edit-remind").value = found.t.remind === undefined ? "" : String(found.t.remind);
+    syncRemindField($("edit-start"), $("edit-remind"));
     $("edit-error").hidden = true;
     dialog.showModal();
   }
@@ -2863,6 +3039,7 @@ html.standalone:not(.signed-in) body::before {
     const target = rowEl(r.date, r.id)?.querySelector(".task-main, .tl-main");
     (target || (S.view === "day" ? $("dv-add-title") : document.querySelector(`.day[data-date="${r.date}"] .add-title`)) || $("w-title")).focus?.();
   });
+  $("edit-start").addEventListener("input", () => syncRemindField($("edit-start"), $("edit-remind")));
   $("edit-close").addEventListener("click", () => dialog.close());
   $("edit-cancel").addEventListener("click", () => dialog.close());
   $("edit-delete").addEventListener("click", () => {
@@ -2881,6 +3058,8 @@ html.standalone:not(.signed-in) body::before {
     const found = findTask(e.date, e.id);
     if (!found) { dialog.close(); return; }
     const updated = { ...found.t, text: text.slice(0, 200), time: start, end, done: $("edit-done").checked };
+    const remind = $("edit-remind").value === "" ? null : Number($("edit-remind").value);
+    if (start && REMIND_CHOICES.includes(remind)) updated.remind = remind; else delete updated.remind;
     found.list.splice(found.list.indexOf(found.t), 1);
     if (!found.list.length) delete S.week.days[e.date];
     if (inWeek(date)) {
@@ -3003,11 +3182,12 @@ html.standalone:not(.signed-in) body::before {
       const label = st === "late" ? "Trễ" : st === "done" ? "Xong" : "Sắp tới";
       return `<li class="tl-item" data-status="${st}" data-id="${esc(t.id)}" style="--top:${px(it.s).toFixed(1)}px;--h:${(((it.de - it.s) * PX_PER_HOUR) / 60 - 3).toFixed(1)}px;--col:${it.col};--cols:${it.cols}">` +
         `<button type="button" class="check tl-check" aria-pressed="${t.done}" aria-label="Đã xong: ${esc(t.text)}">${CHECKBOX}</button>` +
-        `<button type="button" class="tl-main" aria-label="Sửa việc: ${esc(t.text)}, ${time}" title="${esc(t.text)}"><span class="tl-title"><span>${esc(t.text)}</span></span><span class="tl-time">${time}${st === "late" ? " · Trễ" : ""}</span></button>` +
+        `<button type="button" class="tl-main" aria-label="Sửa việc: ${esc(t.text)}, ${time}${t.remind !== undefined ? ", " + remindLabel(t.remind).toLowerCase() : ""}" title="${esc(t.text)}"><span class="tl-title"><span>${esc(t.text)}</span></span><span class="tl-time">${time}${t.remind !== undefined ? ` <span class="tl-bell" title="${remindLabel(t.remind)}">${ICON.bell}</span>` : ""}${st === "late" ? " · Trễ" : ""}</span></button>` +
         `<span class="sr-only">Trạng thái: ${label}</span></li>`;
     }).join("");
     if (showNow) track.insertAdjacentHTML("beforeend", `<li class="tl-now" aria-hidden="true" style="top:${nowTop.toFixed(1)}px"></li>`);
     $("dv-empty").hidden = timed.length > 0 || S.loading;
+    renderRemindPanel();
   }
 
   function wireDayView() {
@@ -3022,15 +3202,202 @@ html.standalone:not(.signed-in) body::before {
       if (e.target.closest(".check")) return toggle(S.selected, item.dataset.id);
       if (e.target.closest(".task-main, .tl-main")) openEdit(S.selected, item.dataset.id);
     });
+    $("dv-add-start").addEventListener("input", () => syncRemindField($("dv-add-start"), $("dv-add-remind")));
+    syncRemindField($("dv-add-start"), $("dv-add-remind"));
     $("dv-add").addEventListener("submit", (e) => {
       e.preventDefault();
       const f = e.currentTarget, text = f.elements.title.value.trim(), start = f.elements.start.value, end = f.elements.end.value;
       if (!text) return f.elements.title.focus();
       const problem = timeProblem(start, end);
       if (problem) return showToast(problem, { error: true });
-      if (add(S.selected, text, start, end)) f.reset();
+      const remind = f.elements.remind.value === "" ? null : Number(f.elements.remind.value);
+      if (add(S.selected, text, start, end, remind)) { f.reset(); syncRemindField(f.elements.start, f.elements.remind); }
       f.elements.title.focus();
     });
+  }
+
+  // ---- Reminders: they work while this page is open (a background tab counts) ----
+  const REMIND_ON_KEY = "ai-planner-remind-on";
+  const SNOOZE_MIN = 5;           // "Báo lại"
+  const LATE_GRACE_MIN = 5;       // a reminder still makes sense this long after the start time
+  const MAX_CARDS = 4;
+  const BASE_TITLE = document.title;
+  let remState = null;            // { fired: { key: 1 }, snooze: { key: epochMs } }
+  let remCache = { key: "", at: 0, week: null };
+  const cards = [];               // reminders on screen
+
+  const remindOn = () => { try { return localStorage.getItem(REMIND_ON_KEY) !== "0"; } catch { return true; } };
+  const remStateKey = () => "ai-planner-rem:" + (me ? me.id : "shared");
+  const remKey = (date, t) => `${date}|${t.id}|${t.time}|${t.remind}`;
+
+  function loadRem() {
+    if (remState) return remState;
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(remStateKey())); } catch { /* start fresh */ }
+    remState = { fired: s && typeof s.fired === "object" && s.fired ? s.fired : {}, snooze: s && typeof s.snooze === "object" && s.snooze ? s.snooze : {} };
+    return remState;
+  }
+  function saveRem() { try { localStorage.setItem(remStateKey(), JSON.stringify(remState)); } catch { /* reminders still fire this visit */ } }
+
+  /** Today's tasks, from the open week or, when another week is open, from the saved copy. */
+  async function tasksOn(date) {
+    const monday = mondayOf(date);
+    if (monday === S.monday) return S.loading ? [] : S.week.days[date] || [];
+    const key = weekKey(monday);
+    if (remCache.key === key && Date.now() - remCache.at < 45000) return remCache.week.days[date] || [];
+    try {
+      const w = normalize(await readDoc(key));
+      remCache = { key, at: Date.now(), week: w };
+      return w.days[date] || [];
+    } catch { return []; }
+  }
+
+  async function markDone(date, id) {
+    const found = inWeek(date) ? findTask(date, id) : null;
+    if (found) { if (!found.t.done) toggle(date, id); return; }
+    await changeOtherWeek(date, (w) => { const t = (w.days[date] || []).find((x) => x.id === id); if (t) t.done = true; });
+    remCache.at = 0;
+  }
+
+  async function reminderTick() {
+    if (!remindOn() || store.kind === "pending" || (STANDALONE && !me)) return;
+    const now = nowVN(), st = loadRem();
+    const list = await tasksOn(now.date);
+    let changed = false;
+    // forget old marks
+    const oldest = addDays(now.date, -2);
+    for (const k of Object.keys(st.fired)) if (k.slice(0, 10) < oldest) { delete st.fired[k]; changed = true; }
+    for (const t of list) {
+      if (t.done || !t.time || t.remind === undefined) continue;
+      const k = remKey(now.date, t);
+      if (st.fired[k]) continue;
+      const start = toMin(t.time);
+      if (now.minutes >= start - t.remind && now.minutes <= start + LATE_GRACE_MIN) {
+        st.fired[k] = 1; changed = true;
+        fireReminder(now.date, t, start - now.minutes);
+      }
+    }
+    for (const [k, at] of Object.entries(st.snooze)) {
+      if (at > Date.now()) continue;
+      delete st.snooze[k]; changed = true;
+      const [d, id] = k.split("|");
+      const t = d === now.date ? list.find((x) => x.id === id) : null;
+      if (t && !t.done && t.time) fireReminder(d, t, toMin(t.time) - now.minutes);
+    }
+    if (changed) saveRem();
+    // a task finished meanwhile no longer needs its card
+    for (let i = cards.length - 1; i >= 0; i--) {
+      const c = cards[i], t = list.find((x) => x.id === c.id);
+      if (c.date === now.date && t && t.done) cards.splice(i, 1);
+    }
+    renderCards();
+    renderRemindPanel();
+  }
+
+  function minutesText(left) {
+    return left > 0 ? `Còn ${left} phút nữa` : left === 0 ? "Đến giờ rồi" : `Đã quá giờ ${-left} phút`;
+  }
+
+  function fireReminder(date, t, left) {
+    const key = remKey(date, t);
+    const existing = cards.findIndex((c) => c.key === key);
+    if (existing >= 0) cards.splice(existing, 1);
+    cards.push({ key, date, id: t.id, title: t.text, time: timeText(t), left });
+    notifyBrowser(t, left, key);
+    renderCards();
+  }
+
+  function renderCards() {
+    const region = $("rem-region");
+    const shown = cards.slice(-MAX_CARDS);
+    region.innerHTML = shown.map((c) => `<div class="rem-card" role="alert" data-key="${esc(c.key)}">` +
+      `<div class="rem-head"><span class="rem-bell">${ICON.bell}</span><span>Nhắc việc · ${esc(minutesText(c.left))}</span></div>` +
+      `<p class="rem-title">${esc(c.title)}</p><p class="rem-time">${esc(c.time)} · ${esc(DAY_NAMES[weekdayIndex(c.date)])}, ${dm(c.date)}</p>` +
+      `<div class="rem-actions"><button type="button" class="btn btn-primary" data-rem="done">Đã xong</button>` +
+      `<button type="button" class="btn" data-rem="snooze">Báo lại ${SNOOZE_MIN} phút</button><button type="button" class="btn btn-ghost" data-rem="close">Đóng</button></div></div>`).join("") +
+      (cards.length > MAX_CARDS ? `<p class="rem-more">Còn ${cards.length - MAX_CARDS} nhắc nhở khác.</p>` : "");
+    document.title = cards.length ? `(${cards.length}) ${BASE_TITLE}` : BASE_TITLE;
+  }
+
+  function onCardClick(e) {
+    const btn = e.target.closest("[data-rem]"), card = e.target.closest(".rem-card");
+    if (!btn || !card) return;
+    const i = cards.findIndex((c) => c.key === card.dataset.key);
+    if (i < 0) return;
+    const c = cards[i];
+    cards.splice(i, 1);
+    if (btn.dataset.rem === "done") markDone(c.date, c.id);
+    else if (btn.dataset.rem === "snooze") { loadRem().snooze[`${c.date}|${c.id}`] = Date.now() + SNOOZE_MIN * 60000; saveRem(); }
+    renderCards();
+    renderRemindPanel();
+  }
+
+  // ---- Browser notifications (only shown while the page is in the background) ----
+  const notifySupported = () => { try { return typeof Notification !== "undefined"; } catch { return false; } };
+  const notifyPermission = () => { try { return Notification.permission; } catch { return "denied"; } };
+
+  function notifyBrowser(t, left, key) {
+    if (!notifySupported() || notifyPermission() !== "granted") return;
+    if (document.visibilityState === "visible" && document.hasFocus()) return;
+    try {
+      const n = new Notification(`Nhắc việc: ${t.text}`, { body: `${timeText(t)} · ${minutesText(left)}`, tag: key });
+      n.onclick = () => { window.focus(); n.close(); };
+    } catch { /* the on-screen card still shows */ }
+  }
+
+  async function enableNotifications() {
+    if (!notifySupported()) return;
+    try { await Notification.requestPermission(); } catch { /* shown below */ }
+    renderRemindPanel();
+  }
+
+  function testNotification() {
+    try {
+      const n = new Notification("Ai Planner", { body: "Thông báo hoạt động. Bạn sẽ nhận được nhắc nhở như thế này.", tag: "ai-planner-test" });
+      n.onclick = () => { window.focus(); n.close(); };
+    } catch { $("notify-state").textContent = "Chưa gửi được thông báo thử. Hãy thử mở trang trực tiếp trên trình duyệt."; }
+  }
+
+  // ---- Panel in the day plan ----
+  function nextReminderText() {
+    if (!remindOn()) return "Nhắc nhở đang tắt.";
+    const now = S.now;
+    if (mondayOf(now.date) !== S.monday) return "Chuyển về tuần này để xem nhắc nhở sắp tới.";
+    const st = loadRem(), upcoming = [];
+    for (const t of S.week.days[now.date] || []) {
+      if (t.done || !t.time || t.remind === undefined || st.fired[remKey(now.date, t)]) continue;
+      const start = toMin(t.time), due = Math.max(0, start - t.remind);
+      if (due + t.remind + LATE_GRACE_MIN >= now.minutes) upcoming.push({ due, t });
+    }
+    if (!upcoming.length) return "Hôm nay chưa có nhắc nhở nào sắp tới. Chọn “Nhắc nhở” khi thêm hoặc sửa việc có giờ.";
+    upcoming.sort((a, b) => a.due - b.due);
+    const n = upcoming[0];
+    return `Nhắc tiếp theo: ${hh(n.due)} · ${n.t.text} (lúc ${n.t.time})`;
+  }
+
+  function renderRemindPanel() {
+    if (!$("remind-next")) return;
+    $("remind-on").checked = remindOn();
+    $("remind-next").textContent = nextReminderText();
+    const btn = $("notify-btn"), info = $("notify-state");
+    if (!notifySupported()) { btn.hidden = true; info.textContent = "Trình duyệt hoặc ứng dụng này không hỗ trợ thông báo. Nhắc nhở vẫn hiện ngay trên trang khi trang đang mở."; return; }
+    const perm = notifyPermission();
+    if (perm === "granted") { btn.hidden = false; btn.textContent = "Gửi thử thông báo"; info.textContent = "Thông báo trình duyệt đang bật: khi bạn ở tab khác, nhắc nhở sẽ hiện thành thông báo."; }
+    else if (perm === "denied") { btn.hidden = true; info.textContent = "Thông báo trình duyệt đang bị chặn. Hãy cho phép trong cài đặt trang web rồi tải lại. Nhắc nhở vẫn hiện ngay trên trang."; }
+    else { btn.hidden = false; btn.textContent = "Bật thông báo trình duyệt"; info.textContent = "Để được báo cả khi đang ở tab khác."; }
+  }
+
+  function wireReminders() {
+    $("rem-region").addEventListener("click", onCardClick);
+    $("remind-on").addEventListener("change", (e) => {
+      try { localStorage.setItem(REMIND_ON_KEY, e.target.checked ? "1" : "0"); } catch { /* applies for this visit */ }
+      if (!e.target.checked) { cards.length = 0; renderCards(); }
+      renderRemindPanel();
+      if (e.target.checked) void reminderTick();
+    });
+    $("notify-btn").addEventListener("click", () => (notifyPermission() === "granted" ? testNotification() : enableNotifications()));
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") void reminderTick(); });
+    setInterval(() => { void reminderTick(); }, 15000);
   }
 
   // ---- Light / dark ----
@@ -3064,13 +3431,13 @@ html.standalone:not(.signed-in) body::before {
     const str = (v) => (typeof v === "string" ? v : "");
     const tasks = [], weeks = [];
     let skipped = 0;
-    const cleanT = (date, title, start, end, done) => {
+    const cleanT = (date, title, start, end, done, remind) => {
       const d = str(date), t = str(title).trim().slice(0, 200);
       if (!validDate(d) || !t) return null;
       const s = TIME_RE.test(str(start)) ? str(start) : "";
       let e = TIME_RE.test(str(end)) ? str(end) : "";
       if (e && (!s || toMin(e) <= toMin(s))) e = "";
-      return { date: d, title: t, start: s, end: e, done: done === true };
+      return { date: d, title: t, start: s, end: e, done: done === true, remind: s && REMIND_CHOICES.includes(remind) ? remind : null };
     };
     const cleanW = (ws, goal, notes) => {
       const w = str(ws), g = str(goal).slice(0, 300), n = str(notes).slice(0, 5000);
@@ -3080,7 +3447,7 @@ html.standalone:not(.signed-in) body::before {
     if (!isObj(data)) throw new Error("File không đúng định dạng sao lưu.");
     if (data.app === "ai-planner") {
       if (!Array.isArray(data.tasks) || !Array.isArray(data.weeks)) throw new Error("File sao lưu bị thiếu dữ liệu.");
-      for (const r of data.tasks) { const t = isObj(r) ? cleanT(r.date, r.title, r.startTime, r.endTime, r.done) : null; if (t) tasks.push(t); else skipped++; }
+      for (const r of data.tasks) { const t = isObj(r) ? cleanT(r.date, r.title, r.startTime, r.endTime, r.done, r.remindMinutes) : null; if (t) tasks.push(t); else skipped++; }
       for (const r of data.weeks) { const w = isObj(r) ? cleanW(r.weekStart, r.goal, r.notes) : null; if (w) weeks.push(w); }
     } else if (isObj(data.tasks) && isObj(data.notes)) {
       for (const [date, list] of Object.entries(data.tasks)) {
@@ -3125,7 +3492,7 @@ html.standalone:not(.signed-in) body::before {
           if (seen.has(k)) { duplicates++; continue; }
           const list = (w.days[t.date] ||= []);
           if (list.length >= MAX_PER_DAY) { skipped++; continue; }
-          list.push({ id: uid(), text: t.title, time: t.start, end: t.end, done: t.done });
+          list.push({ id: uid(), text: t.title, time: t.start, end: t.end, done: t.done, ...(t.remind !== null ? { remind: t.remind } : {}) });
           seen.add(k);
           added++;
           changed = true;
@@ -3179,7 +3546,7 @@ html.standalone:not(.signed-in) body::before {
     for (const [key, raw] of entries) {
       if (!/^w\d{4}-\d{2}-\d{2}$/.test(key)) continue;
       const w = normalize(raw);
-      for (const [date, list] of Object.entries(w.days)) for (const t of list) tasks.push({ date, title: t.text, startTime: t.time || null, endTime: t.end || null, done: t.done });
+      for (const [date, list] of Object.entries(w.days)) for (const t of list) tasks.push({ date, title: t.text, startTime: t.time || null, endTime: t.end || null, done: t.done, remindMinutes: t.remind ?? null });
       if (w.goal.trim() || w.notes.trim()) weeks.push({ weekStart: key.slice(1), goal: w.goal, notes: w.notes });
     }
     tasks.sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || "99:99").localeCompare(b.startTime || "99:99"));
@@ -3202,6 +3569,7 @@ html.standalone:not(.signed-in) body::before {
     $("this-week").addEventListener("click", () => openWeek(mondayOf(S.now.date)));
     $("theme-btn").addEventListener("click", toggleTheme);
     wireDayView();
+    wireReminders();
     $("strip").addEventListener("click", (e) => {
       const b = e.target.closest(".strip-day");
       if (!b) return;
