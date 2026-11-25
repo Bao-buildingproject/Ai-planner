@@ -1,0 +1,2072 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Ai Planner: sổ kế hoạch tuần. Ghi việc theo từng ngày, tích khi xong, xem tiến độ cả tuần, mục tiêu và ghi chú.">
+<meta name="theme-color" content="#f3f6f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1727" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Crect x='1' y='4' width='32' height='29' rx='9' fill='%231b2a4a'/%3E%3Cpath d='M10.5 1.8v5.4M23.5 1.8v5.4' stroke='%231b2a4a' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M9.6 19.2c1.9 1.2 3.4 2.9 4.6 5 2.5-5.4 6.1-9.6 10.6-12.9' fill='none' stroke='%23d9f36b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<title>Ai Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Ai Planner · hướng B "Giấy kẻ ô": a cool paper notebook, navy ink, a lime
+   highlighter for what is done and a red pen for what is late. */
+
+:root {
+  --paper: #f3f6f9;
+  --grid: #e2e9f1;
+  --sheet: #fcfdfe;
+  --ink: #1b2a4a;
+  --ink-2: #58698a;
+  --rule: #d3dce8;
+  --soft: #e7edf5;
+  --on-ink: #f6f8fb;
+  --hl: #d9f36b;
+  --hl-ink: #1b2a4a;
+  --ok: #3b6c1d;
+  --late: #c23b33;
+  --late-soft: #fbeae8;
+  --shadow-sheet: 0 1px 0 var(--rule), 0 18px 36px -28px rgb(27 42 74 / 0.45);
+  --shadow-pop: 0 24px 60px -20px rgb(27 42 74 / 0.45);
+
+  --font-text: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --t-fast: 120ms;
+  --t-mid: 240ms;
+  --t-slow: 450ms;
+  --ease: cubic-bezier(0.3, 0.7, 0.2, 1);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1727;
+    --grid: #172238;
+    --sheet: #121c2f;
+    --ink: #e4eaf5;
+    --ink-2: #97a6c2;
+    --rule: #2a3854;
+    --soft: #1c2840;
+    --on-ink: #0f1727;
+    --hl: #4a5d10;
+    --hl-ink: #f2f7dc;
+    --ok: #b6d94c;
+    --late: #ff7d72;
+    --late-soft: #3a1d24;
+    --shadow-sheet: 0 1px 0 var(--rule), 0 18px 36px -24px rgb(0 0 0 / 0.6);
+    --shadow-pop: 0 24px 60px -16px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0f1727;
+  --grid: #172238;
+  --sheet: #121c2f;
+  --ink: #e4eaf5;
+  --ink-2: #97a6c2;
+  --rule: #2a3854;
+  --soft: #1c2840;
+  --on-ink: #0f1727;
+  --hl: #4a5d10;
+  --hl-ink: #f2f7dc;
+  --ok: #b6d94c;
+  --late: #ff7d72;
+  --late-soft: #3a1d24;
+  --shadow-sheet: 0 1px 0 var(--rule), 0 18px 36px -24px rgb(0 0 0 / 0.6);
+  --shadow-pop: 0 24px 60px -16px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+  color: var(--ink);
+  font: 400 15px/1.55 var(--font-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (max-width: 600px) {
+  body {
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--grid) 55%, var(--paper)) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--grid) 55%, var(--paper)) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--hl);
+  color: var(--hl-ink);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font: 400 12px/1.3 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ---------- Controls ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--sheet);
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    background-color var(--t-fast),
+    border-color var(--t-fast),
+    transform var(--t-fast);
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--ink-2);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+}
+
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.btn-primary {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.btn-primary:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 88%, var(--paper));
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--rule);
+  background: var(--sheet);
+}
+
+.btn-danger {
+  border-color: color-mix(in srgb, var(--late) 45%, var(--rule));
+  color: var(--late);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: var(--late);
+  background: var(--late-soft);
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--sheet);
+  color: var(--ink);
+  transition: border-color var(--t-fast);
+}
+
+.icon-btn:hover:not(:disabled) {
+  border-color: var(--ink-2);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field > span:first-child,
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--sheet);
+  color: var(--ink);
+  transition:
+    border-color var(--t-fast),
+    box-shadow var(--t-fast);
+}
+
+.input::placeholder {
+  color: var(--ink-2);
+  opacity: 1;
+}
+
+.input:hover {
+  border-color: var(--ink-2);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--late);
+}
+
+textarea.input.goal {
+  min-height: 0;
+  resize: none;
+}
+
+textarea.input {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+input[type="time"].input,
+input[type="date"].input {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.form-error {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--late) 40%, transparent);
+  border-radius: var(--r-sm);
+  background: var(--late-soft);
+  color: var(--late);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-error svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- App frame ---------- */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 21;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--paper);
+}
+
+.topbar {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: auto;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-block: 24px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+@media (min-width: 900px) {
+  .page,
+  .topbar-inner {
+    padding-left: max(32px, env(safe-area-inset-left, 0px));
+    padding-right: max(32px, env(safe-area-inset-right, 0px));
+  }
+}
+
+/* ---------- Week ---------- */
+
+.week {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "nav" "progress" "strip" "days" "notes";
+  gap: 18px;
+}
+
+.w-nav { grid-area: nav; }
+.w-progress { grid-area: progress; }
+.w-strip { grid-area: strip; }
+.w-days { grid-area: days; }
+.w-notes { grid-area: notes; }
+
+@media (min-width: 900px) {
+  .week {
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "nav days" "progress days" "notes days";
+    align-items: start;
+    column-gap: 32px;
+    row-gap: 22px;
+  }
+  .w-strip {
+    display: none !important;
+  }
+}
+
+.w-nav {
+  display: grid;
+  gap: 10px;
+}
+
+.w-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.w-nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.w-nav-buttons .btn {
+  min-height: 40px;
+}
+
+.w-progress {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 4px;
+}
+
+.pg-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pg-percent {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pg-percent small {
+  margin-left: 2px;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.pg-count {
+  color: var(--ink-2);
+  font-size: 14px;
+  text-align: right;
+}
+
+.pg-bar {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--soft);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.pg-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ink);
+  transition: width var(--t-slow) var(--ease), background-color var(--t-mid);
+}
+
+.pg-bar[data-full] > span {
+  background: var(--hl);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hl-ink) 35%, transparent);
+}
+
+.pg-compare {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.pg-compare svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* Day strip (phones) */
+
+.w-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.strip-day {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px 0 7px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--sheet);
+  transition: background-color var(--t-fast), border-color var(--t-fast);
+}
+
+.strip-day small {
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.strip-day b {
+  padding: 0 3px;
+  font: 600 16px/1.15 var(--font-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.strip-day.today b {
+  background: linear-gradient(var(--hl), var(--hl)) no-repeat 0 85% / 100% 40%;
+}
+
+.strip-day .dots {
+  display: flex;
+  gap: 3px;
+  height: 5px;
+}
+
+.strip-day .dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--rule);
+}
+
+.strip-day .dots i.on {
+  background: var(--ink);
+}
+
+.strip-day[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.strip-day[aria-pressed="true"] small {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.strip-day[aria-pressed="true"].today b {
+  background: none;
+  text-decoration: underline 2px;
+  text-underline-offset: 3px;
+}
+
+.strip-day[aria-pressed="true"] .dots i {
+  background: color-mix(in srgb, var(--on-ink) 35%, transparent);
+}
+
+.strip-day[aria-pressed="true"] .dots i.on {
+  background: var(--hl);
+}
+
+/* Day pages */
+
+.w-days {
+  display: grid;
+  gap: 16px;
+}
+
+.weekend {
+  display: contents;
+}
+
+@media (min-width: 900px) {
+  .w-days {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .weekend {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1180px) {
+  .w-days {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .day:not([data-selected]) {
+    display: none;
+  }
+}
+
+.day {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 16px 16px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+  container-type: inline-size;
+}
+
+.day[data-today] {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink), var(--shadow-sheet);
+}
+
+.day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.day-head h2 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.day-head .date {
+  color: var(--ink-2);
+  font: 400 13px var(--font-mono);
+}
+
+.today-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--hl);
+  color: var(--hl-ink);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.day-count {
+  color: var(--ink-2);
+  font: 12px var(--font-mono);
+  white-space: nowrap;
+}
+
+.day-empty {
+  padding: 8px 0 4px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+@media (max-width: 899px) {
+  .day {
+    padding: 18px 18px 14px;
+  }
+  .day-head h2 {
+    font-size: 20px;
+  }
+}
+
+.tasks {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 4px;
+  padding: 5px 0;
+  border-top: 1px dashed var(--rule);
+}
+
+.task:first-child {
+  border-top: 0;
+}
+
+.check {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--ink);
+}
+
+.check svg {
+  width: 22px;
+  height: 22px;
+  overflow: visible;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ck-box {
+  stroke: var(--ink-2);
+  stroke-width: 1.6;
+  transition: stroke var(--t-fast);
+}
+
+.check:hover .ck-box,
+.task[data-status="done"] .ck-box {
+  stroke: var(--ink);
+}
+
+.ck-mark {
+  stroke: var(--ink);
+  stroke-width: 2.4;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--t-slow) var(--ease);
+}
+
+.task[data-status="done"] .ck-mark {
+  stroke-dashoffset: 0;
+}
+
+.task-main {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+}
+
+.task-title {
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.task-title > span {
+  margin: 0 -3px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background: linear-gradient(var(--hl), var(--hl)) no-repeat 0 60% / 0% 80%;
+  transition: background-size var(--t-slow) var(--ease), color var(--t-mid);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.task-main:hover .task-title > span {
+  text-decoration: underline dotted var(--ink-2);
+  text-underline-offset: 3px;
+}
+
+.task[data-status="done"] .task-title > span {
+  background-size: 100% 80%;
+  color: var(--hl-ink);
+}
+
+.task-time {
+  color: var(--ink-2);
+  font: 12.5px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.task-status {
+  padding: 9px 2px 0 6px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.task[data-status="late"] .task-status,
+.task[data-status="late"] .task-time {
+  color: var(--late);
+}
+
+.task[data-status="done"] .task-status {
+  color: var(--ok);
+}
+
+.task[data-pending] {
+  opacity: 0.6;
+}
+
+/* Add a task */
+
+.add-toggle {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 38px;
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+.add-toggle:hover {
+  color: var(--ink);
+}
+
+.add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "title title" "time submit";
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--rule);
+}
+
+.add .input {
+  min-height: 40px;
+  padding: 7px 10px;
+  font-size: 14px;
+}
+
+.add .add-title { grid-area: title; }
+.add .add-time { grid-area: time; }
+.add .add-submit { grid-area: submit; }
+
+@container (min-width: 440px) {
+  .add {
+    grid-template-columns: minmax(0, 1fr) 112px auto;
+    grid-template-areas: "title time submit";
+  }
+}
+
+@media (min-width: 900px) {
+  .add:not([data-open]) {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .add-toggle {
+    display: none;
+  }
+}
+
+/* Goal and notes */
+
+.w-notes {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+}
+
+.notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.notes-head h2 {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.save-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.save-state[data-state="error"] {
+  color: var(--late);
+}
+
+.save-state svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lined {
+  min-height: 168px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: repeating-linear-gradient(transparent 0 27px, var(--rule) 27px 28px) local;
+  line-height: 28px;
+  box-shadow: none;
+}
+
+.lined:hover {
+  border-color: transparent;
+}
+
+.lined:focus-visible {
+  box-shadow: none;
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+/* ---------- Dialog ---------- */
+
+.sheet-dialog {
+  width: min(100% - 32px, 460px);
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  color: var(--ink);
+  box-shadow: var(--shadow-pop);
+}
+
+.sheet-dialog[open] {
+  animation: dialog-in var(--t-mid) var(--ease);
+}
+
+.sheet-dialog::backdrop {
+  background: rgb(15 23 39 / 0.5);
+}
+
+.dialog-body {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialog-head h2 {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-weight: 600;
+}
+
+.check-field input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ink);
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.dialog-actions .btn-danger {
+  margin-right: auto;
+}
+
+@media (max-width: 600px) {
+  .sheet-dialog {
+    width: 100%;
+    max-width: 100%;
+    margin: auto 0 0;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+  }
+  .sheet-dialog[open] {
+    animation-name: sheet-up;
+  }
+  .dialog-body {
+    padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0.4;
+  }
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 8px 8px 8px 16px;
+  border-radius: var(--r-md);
+  background: var(--ink);
+  color: var(--on-ink);
+  box-shadow: var(--shadow-pop);
+  font-size: 14px;
+  transform: translateX(-50%);
+  animation: toast-in var(--t-mid) var(--ease);
+}
+
+.toast p {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast button {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--hl);
+  color: var(--hl-ink);
+  font-weight: 600;
+}
+
+.toast[data-kind="error"] {
+  border: 1px solid var(--late);
+  background: var(--late-soft);
+  color: var(--late);
+}
+
+.toast[data-kind="error"] button {
+  background: transparent;
+  color: inherit;
+  text-decoration: underline;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.btn-block {
+  width: 100%;
+  min-height: 46px;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+.link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- Live page extras ---------- */
+
+.icon-btn svg,
+.btn svg,
+.pg-compare svg,
+.save-state svg,
+.form-error svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mode-note {
+  max-width: 72ch;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.backup {
+  display: grid;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--rule);
+}
+
+.backup h3 {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.backup-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.backup-result {
+  color: var(--ok);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.backup-result:empty {
+  display: none;
+}
+
+.backup-result.is-error {
+  color: var(--late);
+}
+
+.store-note {
+  font-size: 12.5px;
+}
+
+.dot-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  animation: pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  to {
+    opacity: 0.25;
+  }
+}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">
+      <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true" focusable="false"><rect x="1" y="4" width="32" height="29" rx="9" fill="var(--ink)"/><path d="M10.5 1.8v5.4M23.5 1.8v5.4" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/><path d="M9.6 19.2c1.9 1.2 3.4 2.9 4.6 5 2.5-5.4 6.1-9.6 10.6-12.9" fill="none" stroke="var(--hl)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Ai Planner</span>
+    </span>
+    <button type="button" class="icon-btn" id="theme-btn" aria-label="Đổi nền sáng hoặc tối"></button>
+  </div>
+</header>
+<main class="page" id="main">
+  <p class="mode-note" id="mode-note" hidden></p>
+  <div class="week" id="week">
+    <div class="w-nav">
+      <p class="eyebrow" id="w-eyebrow"></p>
+      <h1 class="w-title" id="w-title"></h1>
+      <div class="w-nav-buttons">
+        <button type="button" class="icon-btn" id="prev-week" aria-label="Tuần trước"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button type="button" class="btn btn-ghost" id="this-week">Tuần này</button>
+        <button type="button" class="icon-btn" id="next-week" aria-label="Tuần sau"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+
+    <section class="w-progress" aria-label="Tiến độ tuần">
+      <div class="pg-top">
+        <span class="pg-percent"><span id="pg-num">0</span><small>%</small></span>
+        <span class="pg-count" id="pg-count"></span>
+      </div>
+      <div class="pg-bar" id="pg-bar" role="progressbar" aria-label="Tiến độ tuần" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+      <p class="pg-compare"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/></svg><span id="pg-prev"></span></p>
+    </section>
+
+    <div class="w-strip" id="strip" role="group" aria-label="Chọn ngày"></div>
+
+    <div class="w-days" id="days"></div>
+
+    <section class="w-notes" aria-labelledby="notes-title">
+      <div class="notes-head">
+        <h2 id="notes-title">Mục tiêu và ghi chú</h2>
+        <span class="save-state" id="save-state" aria-live="polite"></span>
+      </div>
+      <div class="field">
+        <label class="field-label" for="week-goal">Mục tiêu tuần</label>
+        <textarea id="week-goal" class="input goal" rows="2" maxlength="300" placeholder="Tuần này mình muốn đạt được gì?"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label" for="week-notes">Ghi chú</label>
+        <textarea id="week-notes" class="input lined" maxlength="5000" placeholder="Ý tưởng, việc cần nhớ, nhận xét cuối tuần…"></textarea>
+      </div>
+      <div class="backup">
+        <h3>Sao lưu dữ liệu</h3>
+        <p class="hint">Nhập file chỉ thêm việc, không xóa hay ghi đè. Dùng được cả file của bản kế hoạch tuần cũ.</p>
+        <div class="backup-row">
+          <button type="button" class="btn" id="export-btn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 10l5 5 5-5M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>Tải bản sao lưu</button>
+          <button type="button" class="btn" id="import-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>Nhập từ file</button>
+          <input type="file" id="import-file" accept="application/json,.json" hidden aria-label="Chọn file sao lưu">
+        </div>
+        <p class="backup-result" id="backup-result" role="status"></p>
+      </div>
+      <p class="hint store-note" id="store-note"></p>
+    </section>
+  </div>
+</main>
+
+<dialog class="sheet-dialog" id="edit-dialog" aria-labelledby="edit-task-title">
+  <form class="dialog-body" id="edit-form" method="dialog">
+    <div class="dialog-head">
+      <h2 id="edit-task-title">Sửa việc</h2>
+      <button type="button" class="icon-btn" id="edit-close" aria-label="Đóng"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <p class="form-error" id="edit-error" role="alert" hidden></p>
+    <div class="field">
+      <label class="field-label" for="edit-title">Tên việc</label>
+      <input id="edit-title" class="input" name="title" maxlength="200" autocomplete="off" required>
+    </div>
+    <div class="field">
+      <label class="field-label" for="edit-date">Ngày</label>
+      <input id="edit-date" class="input" name="date" type="date" required>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label class="field-label" for="edit-start">Bắt đầu</label>
+        <input id="edit-start" class="input" name="start" type="time">
+      </div>
+      <div class="field">
+        <label class="field-label" for="edit-end">Kết thúc</label>
+        <input id="edit-end" class="input" name="end" type="time">
+      </div>
+    </div>
+    <label class="check-field"><input type="checkbox" id="edit-done" name="done"> Đã xong</label>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-danger" id="edit-delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Xóa</button>
+      <button type="button" class="btn" id="edit-cancel">Hủy</button>
+      <button type="submit" class="btn btn-primary" id="edit-save">Lưu</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast-region" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" hidden><p id="toast-text"></p><button type="button" id="toast-btn">Hoàn tác</button></div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const DAY_NAMES = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+  const DAY_SHORT = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+  const LOCAL_KEY = "ai-planner-v1"; // same key as the earlier version of this page
+  const THEME_KEY = "ai-planner-theme";
+  const MAX_PER_DAY = 100;
+  const $ = (id) => document.getElementById(id);
+  // Opened as a normal website (e.g. GitHub Pages) rather than inside claude.ai.
+  const STANDALONE = !(window.claude && typeof window.claude.use === "function");
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+  // ---- Dates: "YYYY-MM-DD" strings, Monday-first weeks, "now" in Vietnam time (UTC+7) ----
+  const DAY_MS = 86400000;
+  const toUtc = (s) => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+  const fromUtc = (t) => new Date(t).toISOString().slice(0, 10);
+  const addDays = (s, n) => fromUtc(toUtc(s) + n * DAY_MS);
+  const weekdayIndex = (s) => (new Date(toUtc(s)).getUTCDay() + 6) % 7;
+  const mondayOf = (s) => addDays(s, -weekdayIndex(s));
+  const weekDays = (m) => Array.from({ length: 7 }, (_, i) => addDays(m, i));
+  const isoWeek = (s) => {
+    const thu = addDays(s, 3 - weekdayIndex(s));
+    const w1 = mondayOf(thu.slice(0, 4) + "-01-04");
+    return Math.floor((toUtc(thu) - toUtc(w1)) / (7 * DAY_MS)) + 1;
+  };
+  const dm = (s) => s.slice(8, 10) + "/" + s.slice(5, 7);
+  const weekRange = (m) => {
+    const sun = addDays(m, 6);
+    return (m.slice(0, 4) === sun.slice(0, 4) ? dm(m) : dm(m) + "/" + m.slice(0, 4)) + " – " + dm(sun) + "/" + sun.slice(0, 4);
+  };
+  const nowVN = () => {
+    const v = new Date(Date.now() + 7 * 3600000);
+    return { date: v.toISOString().slice(0, 10), minutes: v.getUTCHours() * 60 + v.getUTCMinutes() };
+  };
+  const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const validDate = (s) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && fromUtc(toUtc(s)) === s;
+  const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  const weekKey = (m) => "w" + m;
+
+  // ---- Data shape (unchanged from the earlier version, plus goal and end time) ----
+  // one document per week: { days: { "YYYY-MM-DD": [{ id, text, time, end, done }] }, notes, goal }
+  const blankWeek = () => ({ days: {}, notes: "", goal: "" });
+  function cleanTask(t) {
+    if (!t || typeof t.text !== "string" || !t.text.trim()) return null;
+    const time = TIME_RE.test(t.time || "") ? t.time : "";
+    let end = TIME_RE.test(t.end || "") ? t.end : "";
+    if (end && (!time || toMin(end) <= toMin(time))) end = "";
+    return { id: String(t.id || uid()).slice(0, 40), text: t.text.trim().slice(0, 200), time, end, done: t.done === true };
+  }
+  function normalize(raw) {
+    const w = blankWeek();
+    if (!raw || typeof raw !== "object") return w;
+    if (typeof raw.notes === "string") w.notes = raw.notes.slice(0, 5000);
+    if (typeof raw.goal === "string") w.goal = raw.goal.slice(0, 300);
+    if (raw.days && typeof raw.days === "object") {
+      for (const [k, list] of Object.entries(raw.days)) {
+        if (!validDate(k) || !Array.isArray(list)) continue;
+        const clean = list.map(cleanTask).filter(Boolean);
+        if (clean.length) w.days[k] = clean;
+      }
+    }
+    return w;
+  }
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const byTime = (a, b) => (a.time || "99:99").localeCompare(b.time || "99:99") || a.text.localeCompare(b.text, "vi");
+  const LABEL = { done: "Xong", late: "Trễ", upcoming: "Sắp tới" };
+  function status(date, t, now) {
+    if (t.done) return "done";
+    if (date < now.date) return "late";
+    if (date === now.date) {
+      const ref = t.end || t.time;
+      if (ref && toMin(ref) < now.minutes) return "late";
+    }
+    return "upcoming";
+  }
+  const timeText = (t) => (t.time ? (t.end ? t.time + "–" + t.end : t.time) : "");
+  function timeProblem(start, end) {
+    if (end && !start) return "Nhập giờ bắt đầu trước khi chọn giờ kết thúc";
+    if (start && end && toMin(end) <= toMin(start)) return "Giờ kết thúc phải sau giờ bắt đầu";
+    return null;
+  }
+
+  // ---- Storage: the viewer's own claude.ai account (db), or this browser as a fallback ----
+  const store = { kind: "pending", col: null, db: null };
+  const pending = new Map(); // document key -> body waiting to be written
+  const writing = new Set();
+  let modeNote = "";
+
+  function localAll() { try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || {}; } catch { return {}; } }
+  function localSet(key, value) {
+    try { const all = localAll(); all[key] = value; localStorage.setItem(LOCAL_KEY, JSON.stringify(all)); return true; } catch { return false; }
+  }
+
+  async function readDoc(key) {
+    if (store.kind === "db") {
+      const snap = await store.col.doc(key).get();
+      return snap.exists ? clone(snap.data()) : null;
+    }
+    return localAll()[key] ?? null;
+  }
+
+  function switchToLocal(note) {
+    store.kind = "local";
+    store.col = null;
+    for (const [key, body] of pending) localSet(key, body);
+    pending.clear();
+    localSet(weekKey(S.monday), clone(S.week));
+    modeNote = note;
+    render();
+  }
+
+  /** Writes go one at a time per document; a newer body replaces one still waiting. */
+  function queueWrite(key, body) {
+    if (store.kind !== "db") {
+      if (!localSet(key, body)) setSaveState("error", "Trình duyệt đang chặn lưu dữ liệu.");
+      else if (key === weekKey(S.monday)) setSaveState("saved");
+      return;
+    }
+    pending.set(key, body);
+    if (key === weekKey(S.monday)) setSaveState("saving");
+    void flush(key, 0);
+  }
+
+  async function flush(key, attempt) {
+    if (writing.has(key) || !pending.has(key) || store.kind !== "db") return;
+    const body = pending.get(key);
+    pending.delete(key);
+    writing.add(key);
+    try {
+      await store.col.doc(key).set(body);
+    } catch (e) {
+      writing.delete(key);
+      if (!pending.has(key)) pending.set(key, body);
+      const code = e && e.code;
+      if (code === "invalid_argument" || code === "not_granted" || code === "revoked" || code === "capability_disabled") {
+        switchToLocal("Bạn đang chỉ có quyền xem trang này, nên kế hoạch được lưu trong trình duyệt này. Muốn lưu vào tài khoản, hãy nhờ chủ trang mời bạn với quyền Contributor hoặc Editor.");
+        return;
+      }
+      if (code === "quota_exceeded") { setSaveState("error", "Hết dung lượng lưu trữ."); return; }
+      if (attempt < 1) { setTimeout(() => flush(key, attempt + 1), 1200 + Math.random() * 1200); return; }
+      setSaveState("error", "Chưa lưu được.");
+      return;
+    }
+    writing.delete(key);
+    if (pending.has(key)) void flush(key, 0);
+    else if (key === weekKey(S.monday)) setSaveState("saved");
+  }
+
+  function retryWrites() { for (const key of [...pending.keys()]) void flush(key, 0); }
+
+  // ---- State ----
+  const S = { monday: mondayOf(nowVN().date), week: blankWeek(), prev: null, selected: nowVN().date, loading: true, now: nowVN(), theme: "system", editing: null };
+  const ICON = {
+    plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>',
+    sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
+    moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
+    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    alert: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+  };
+  const CHECKBOX = '<svg viewBox="0 0 22 22" aria-hidden="true" focusable="false"><path class="ck-box" d="M3.4 4.3c4.5-.9 10-1.1 15-.4.6 4.5.5 9.3.1 13.8-4.9.7-10 .6-14.9.1-.6-4.5-.7-9.1-.2-13.5z"/><path class="ck-mark" pathLength="1" d="M5.8 11.4c1.5 1.1 2.7 2.4 3.6 4.1 2.1-4.5 5-8.1 8.7-11"/></svg>';
+
+  // ---- Day pages: built once, filled on every render (typing in "add" boxes survives) ----
+  const dayEls = [];
+  function buildDays() {
+    const host = $("days");
+    const weekend = document.createElement("div");
+    weekend.className = "weekend";
+    for (let i = 0; i < 7; i++) {
+      const sec = document.createElement("section");
+      sec.className = "day";
+      sec.setAttribute("aria-labelledby", "day-h-" + i);
+      sec.innerHTML =
+        `<header class="day-head"><h2 id="day-h-${i}"></h2><span class="day-count"></span></header><div class="day-body"></div>` +
+        `<button type="button" class="btn btn-ghost add-toggle">${ICON.plus}Thêm việc</button>` +
+        `<form class="add" autocomplete="off" aria-label="Thêm việc cho ${DAY_NAMES[i]}">` +
+        `<input class="input add-title" name="title" placeholder="Thêm việc…" maxlength="200" aria-label="Tên việc mới, ${DAY_NAMES[i]}">` +
+        `<input class="input add-time" name="start" type="time" aria-label="Giờ bắt đầu, không bắt buộc">` +
+        `<button class="btn btn-primary add-submit" type="submit">${ICON.plus}Thêm</button></form>`;
+      sec.dataset.index = String(i);
+      (i < 5 ? host : weekend).appendChild(sec);
+      dayEls.push({ root: sec, head: sec.querySelector("h2"), count: sec.querySelector(".day-count"), body: sec.querySelector(".day-body"), toggle: sec.querySelector(".add-toggle"), form: sec.querySelector(".add"), open: false });
+    }
+    host.appendChild(weekend);
+  }
+
+  // ---- Rendering ----
+  function render() {
+    const days = weekDays(S.monday), now = S.now;
+    $("w-eyebrow").textContent = `Tuần ${isoWeek(S.monday)} · ${addDays(S.monday, 3).slice(0, 4)}`;
+    $("w-title").textContent = weekRange(S.monday);
+    $("this-week").disabled = S.monday === mondayOf(now.date);
+    renderProgress();
+    $("strip").innerHTML = days.map((d, i) => {
+      const list = (S.week.days[d] || []).slice().sort(byTime);
+      const today = d === now.date;
+      return `<button type="button" class="strip-day${today ? " today" : ""}" data-date="${d}" aria-pressed="${d === S.selected}"${today ? ' aria-current="date"' : ""} aria-label="${DAY_NAMES[i]} ${dm(d)}, ${list.length} việc"><small>${DAY_SHORT[i]}</small><b>${d.slice(8, 10)}</b><span class="dots" aria-hidden="true">${list.slice(0, 5).map((t) => `<i${t.done ? ' class="on"' : ""}></i>`).join("")}</span></button>`;
+    }).join("");
+    days.forEach((d, i) => renderDay(i, d));
+    const goal = $("week-goal"), notes = $("week-notes");
+    if (document.activeElement !== goal && !notesDirty) goal.value = S.week.goal;
+    if (document.activeElement !== notes && !notesDirty) notes.value = S.week.notes;
+    goal.disabled = notes.disabled = S.loading;
+    $("week").setAttribute("aria-busy", String(S.loading));
+    $("mode-note").hidden = !modeNote;
+    $("mode-note").textContent = modeNote;
+    $("store-note").textContent = store.kind === "db"
+      ? "Kế hoạch lưu riêng trong tài khoản claude.ai của bạn, mở trên điện thoại hay máy tính đều thấy giống nhau. Người khác mở trang này chỉ thấy kế hoạch của chính họ."
+      : store.kind === "local"
+        ? STANDALONE
+          ? "Kế hoạch lưu trong trình duyệt của máy này: mỗi người mở trên máy của mình sẽ có kế hoạch riêng. Hãy tải bản sao lưu thường xuyên; muốn chuyển sang máy khác thì nhập file đó vào."
+          : "Kế hoạch đang lưu trong trình duyệt này."
+        : "";
+  }
+
+  function renderProgress() {
+    let done = 0, total = 0;
+    for (const d of weekDays(S.monday)) for (const t of S.week.days[d] || []) { total++; if (t.done) done++; }
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    $("pg-num").textContent = String(pct);
+    $("pg-count").textContent = S.loading ? "Đang tải…" : total ? `${done}/${total} việc đã xong` : "Tuần này chưa có việc nào";
+    const bar = $("pg-bar");
+    bar.setAttribute("aria-valuenow", String(pct));
+    bar.toggleAttribute("data-full", total > 0 && done === total);
+    bar.firstElementChild.style.width = pct + "%";
+    const p = S.prev;
+    $("pg-prev").textContent = !p ? "Đang xem tuần trước…" : p.total ? `Tuần trước: ${Math.round((p.done / p.total) * 100)}% (${p.done}/${p.total} việc)` : "Tuần trước chưa có việc nào";
+  }
+
+  function renderDay(i, date) {
+    const el = dayEls[i], now = S.now, today = date === now.date;
+    const list = (S.week.days[date] || []).slice().sort(byTime);
+    const done = list.filter((t) => t.done).length;
+    el.root.dataset.date = date;
+    el.root.toggleAttribute("data-selected", date === S.selected);
+    el.root.toggleAttribute("data-today", today);
+    el.head.innerHTML = `${DAY_NAMES[i]}<span class="date">${dm(date)}</span>${today ? '<span class="today-tag">Hôm nay</span>' : ""}`;
+    el.count.textContent = list.length ? `${done}/${list.length}` : "";
+    el.count.setAttribute("aria-label", list.length ? `${done} trên ${list.length} việc đã xong` : "");
+    if (!list.length) {
+      el.body.innerHTML = `<p class="day-empty">${S.loading ? "Đang tải…" : today ? "Hôm nay chưa có việc nào. Thêm việc đầu tiên ở bên dưới." : "Chưa có việc nào."}</p>`;
+    } else {
+      el.body.innerHTML = `<ul class="tasks">${list.map((t) => {
+        const st = status(date, t, now), time = timeText(t), label = st !== "upcoming" || today ? LABEL[st] : "";
+        return `<li class="task" data-status="${st}" data-id="${esc(t.id)}">` +
+          `<button type="button" class="check" aria-pressed="${t.done}" aria-label="Đã xong: ${esc(t.text)}">${CHECKBOX}</button>` +
+          `<button type="button" class="task-main" aria-label="Sửa việc: ${esc(t.text)}${time ? ", " + time : ""}"><span class="task-title"><span>${esc(t.text)}</span></span>${time ? `<span class="task-time">${time}</span>` : ""}</button>` +
+          `<span class="task-status">${label}</span></li>`;
+      }).join("")}</ul>`;
+    }
+    el.toggle.hidden = el.open;
+    el.form.toggleAttribute("data-open", el.open);
+  }
+
+  function setSaveState(state, message) {
+    const el = $("save-state");
+    el.dataset.state = state;
+    if (state === "saving") el.innerHTML = '<span class="dot-pulse" aria-hidden="true"></span>Đang lưu…';
+    else if (state === "saved") el.innerHTML = ICON.check + "Đã lưu";
+    else el.innerHTML = ICON.alert + esc(message || "Chưa lưu được.") + ' <button type="button" class="link-btn" id="retry-save">Thử lại</button>';
+  }
+
+  // ---- Toast ----
+  let toastTimer = null, toastAction = null;
+  function showToast(text, { undo = null, error = false } = {}) {
+    const el = $("toast"), btn = $("toast-btn");
+    $("toast-text").textContent = text;
+    if (error) el.dataset.kind = "error"; else delete el.dataset.kind;
+    btn.hidden = !undo && !error;
+    btn.textContent = undo ? "Hoàn tác" : "Đóng";
+    toastAction = undo;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, undo ? 8000 : 6000);
+  }
+  function hideToast() { $("toast").hidden = true; toastAction = null; }
+
+  // ---- Week loading: live updates from the viewer's own document ----
+  let unsub = null, openToken = 0;
+  function openWeek(monday) {
+    flushNotes();
+    if (unsub) { unsub(); unsub = null; }
+    S.monday = monday;
+    S.week = blankWeek();
+    S.prev = null;
+    const today = S.now.date;
+    S.selected = mondayOf(today) === monday ? today : monday;
+    for (const el of dayEls) { el.open = false; el.form.reset(); }
+    const token = ++openToken, key = weekKey(monday);
+    setSaveState("saved");
+    $("save-state").innerHTML = "";
+    if (store.kind !== "db") {
+      S.week = normalize(store.kind === "local" ? localAll()[key] : null);
+      S.loading = store.kind === "pending";
+      render();
+      if (store.kind === "local") loadPrevious(token);
+      return;
+    }
+    S.loading = true;
+    render();
+    const timer = setTimeout(() => {
+      if (token === openToken && S.loading) setSaveState("error", "Chưa tải được dữ liệu. Kiểm tra mạng rồi mở lại trang.");
+    }, 10000);
+    unsub = store.col.doc(key).onSnapshot((snap) => {
+      if (token !== openToken) return;
+      clearTimeout(timer);
+      // Keep what you just changed: ignore server copies while a change is still being saved.
+      if (pending.has(key) || writing.has(key) || notesDirty) return;
+      S.week = normalize(snap.exists ? clone(snap.data()) : null);
+      S.loading = false;
+      render();
+    }, (err) => {
+      clearTimeout(timer);
+      if (token !== openToken) return;
+      S.loading = false;
+      render();
+      setSaveState("error", "Không tải được dữ liệu (" + ((err && err.code) || "lỗi") + "). Hãy mở lại trang.");
+    });
+    loadPrevious(token);
+  }
+
+  async function loadPrevious(token) {
+    try {
+      const w = normalize(await readDoc(weekKey(addDays(S.monday, -7))));
+      if (token !== openToken) return;
+      let done = 0, total = 0;
+      for (const list of Object.values(w.days)) for (const t of list) { total++; if (t.done) done++; }
+      S.prev = { done, total };
+      renderProgress();
+    } catch { /* the comparison line simply stays empty */ }
+  }
+
+  // ---- Changes ----
+  const inWeek = (date) => mondayOf(date) === S.monday;
+  function commit() { queueWrite(weekKey(S.monday), clone(S.week)); render(); }
+  function findTask(date, id) { const list = S.week.days[date] || []; const t = list.find((x) => x.id === id); return t ? { list, t } : null; }
+  async function changeOtherWeek(date, fn) {
+    try {
+      const key = weekKey(mondayOf(date));
+      const w = normalize(await readDoc(key));
+      fn(w);
+      queueWrite(key, clone(w));
+    } catch {
+      showToast("Chưa lưu được thay đổi. Kiểm tra mạng rồi thử lại.", { error: true });
+    }
+  }
+
+  function toggle(date, id) {
+    const found = findTask(date, id);
+    if (!found) return;
+    found.t.done = !found.t.done;
+    commit();
+    const row = document.querySelector(`.day[data-date="${date}"] .task[data-id="${CSS.escape(id)}"]`);
+    if (row && found.t.done) { row.dataset.status = "upcoming"; void row.offsetWidth; row.dataset.status = "done"; }
+    row?.querySelector(".check")?.focus();
+  }
+
+  function add(date, text, time) {
+    const list = (S.week.days[date] ||= []);
+    if (list.length >= MAX_PER_DAY) { showToast(`Mỗi ngày có tối đa ${MAX_PER_DAY} việc.`, { error: true }); return false; }
+    list.push({ id: uid(), text: text.slice(0, 200), time: TIME_RE.test(time) ? time : "", end: "", done: false });
+    commit();
+    return true;
+  }
+
+  function removeTask(date, id) {
+    const found = findTask(date, id);
+    if (!found) return;
+    found.list.splice(found.list.indexOf(found.t), 1);
+    if (!found.list.length) delete S.week.days[date];
+    commit();
+    const task = found.t;
+    showToast(`Đã xóa “${task.text}”.`, { undo: () => restore(date, task) });
+  }
+
+  function restore(date, task) {
+    if (inWeek(date)) { (S.week.days[date] ||= []).push(task); commit(); }
+    else changeOtherWeek(date, (w) => (w.days[date] ||= []).push(task));
+    showToast(`Đã khôi phục “${task.text}”.`);
+  }
+
+  // ---- Edit dialog ----
+  const dialog = $("edit-dialog");
+  let returnFocus = null;
+  function openEdit(date, id) {
+    const found = findTask(date, id);
+    if (!found) return;
+    S.editing = { date, id };
+    returnFocus = { date, id };
+    $("edit-title").value = found.t.text;
+    $("edit-date").value = date;
+    $("edit-start").value = found.t.time;
+    $("edit-end").value = found.t.end;
+    $("edit-done").checked = found.t.done;
+    $("edit-error").hidden = true;
+    dialog.showModal();
+  }
+  dialog.addEventListener("close", () => {
+    S.editing = null;
+    const r = returnFocus;
+    returnFocus = null;
+    if (!r) return;
+    const target = document.querySelector(`.day[data-date="${r.date}"] .task[data-id="${CSS.escape(r.id)}"] .task-main`);
+    (target || document.querySelector(`.day[data-date="${r.date}"] .add-title`) || $("w-title")).focus?.();
+  });
+  $("edit-close").addEventListener("click", () => dialog.close());
+  $("edit-cancel").addEventListener("click", () => dialog.close());
+  $("edit-delete").addEventListener("click", () => {
+    const e = S.editing;
+    returnFocus = null;
+    dialog.close();
+    if (e) removeTask(e.date, e.id);
+  });
+  $("edit-form").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const e = S.editing;
+    if (!e) return;
+    const text = $("edit-title").value.trim(), date = $("edit-date").value, start = $("edit-start").value, end = $("edit-end").value;
+    const problem = !text ? "Nhập tên việc" : !validDate(date) ? "Chọn ngày hợp lệ" : timeProblem(start, end);
+    if (problem) { const err = $("edit-error"); err.innerHTML = ICON.alert + esc(problem); err.hidden = false; return; }
+    const found = findTask(e.date, e.id);
+    if (!found) { dialog.close(); return; }
+    const updated = { ...found.t, text: text.slice(0, 200), time: start, end, done: $("edit-done").checked };
+    found.list.splice(found.list.indexOf(found.t), 1);
+    if (!found.list.length) delete S.week.days[e.date];
+    if (inWeek(date)) {
+      (S.week.days[date] ||= []).push(updated);
+      returnFocus = { date, id: updated.id };
+      commit();
+    } else {
+      commit();
+      changeOtherWeek(date, (w) => (w.days[date] ||= []).push(updated));
+      returnFocus = null;
+      showToast(`Đã chuyển “${updated.text}” sang ngày ${dm(date)}/${date.slice(0, 4)}.`);
+    }
+    dialog.close();
+  });
+
+  // ---- Goal and notes: saved shortly after typing stops ----
+  let notesTimer = null, notesDirty = false;
+  function onNotesInput() { notesDirty = true; setSaveState("saving"); clearTimeout(notesTimer); notesTimer = setTimeout(flushNotes, 700); }
+  function flushNotes() {
+    clearTimeout(notesTimer);
+    if (!notesDirty) return;
+    notesDirty = false;
+    S.week.goal = $("week-goal").value.slice(0, 300);
+    S.week.notes = $("week-notes").value.slice(0, 5000);
+    queueWrite(weekKey(S.monday), clone(S.week));
+  }
+
+  // ---- Light / dark ----
+  const hostTheme = document.documentElement.getAttribute("data-theme");
+  const isDark = () => {
+    const a = document.documentElement.getAttribute("data-theme");
+    return a ? a === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  function applyTheme(theme) {
+    if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
+    else if (hostTheme) document.documentElement.setAttribute("data-theme", hostTheme);
+    else document.documentElement.removeAttribute("data-theme");
+    renderThemeButton();
+  }
+  function renderThemeButton() {
+    const dark = isDark(), btn = $("theme-btn");
+    btn.innerHTML = dark ? ICON.sun : ICON.moon;
+    btn.setAttribute("aria-label", dark ? "Chuyển sang nền sáng" : "Chuyển sang nền tối");
+    btn.title = btn.getAttribute("aria-label");
+  }
+  function toggleTheme() {
+    S.theme = isDark() ? "light" : "dark";
+    applyTheme(S.theme);
+    if (store.kind === "db") queueWrite("settings", { theme: S.theme });
+    else try { localStorage.setItem(THEME_KEY, S.theme); } catch { /* keeps working for this visit */ }
+  }
+
+  // ---- Backup files ----
+  function parseBackup(data) {
+    const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+    const str = (v) => (typeof v === "string" ? v : "");
+    const tasks = [], weeks = [];
+    let skipped = 0;
+    const cleanT = (date, title, start, end, done) => {
+      const d = str(date), t = str(title).trim().slice(0, 200);
+      if (!validDate(d) || !t) return null;
+      const s = TIME_RE.test(str(start)) ? str(start) : "";
+      let e = TIME_RE.test(str(end)) ? str(end) : "";
+      if (e && (!s || toMin(e) <= toMin(s))) e = "";
+      return { date: d, title: t, start: s, end: e, done: done === true };
+    };
+    const cleanW = (ws, goal, notes) => {
+      const w = str(ws), g = str(goal).slice(0, 300), n = str(notes).slice(0, 5000);
+      if (!validDate(w) || (!g.trim() && !n.trim())) return null;
+      return { weekStart: mondayOf(w), goal: g, notes: n };
+    };
+    if (!isObj(data)) throw new Error("File không đúng định dạng sao lưu.");
+    if (data.app === "ai-planner") {
+      if (!Array.isArray(data.tasks) || !Array.isArray(data.weeks)) throw new Error("File sao lưu bị thiếu dữ liệu.");
+      for (const r of data.tasks) { const t = isObj(r) ? cleanT(r.date, r.title, r.startTime, r.endTime, r.done) : null; if (t) tasks.push(t); else skipped++; }
+      for (const r of data.weeks) { const w = isObj(r) ? cleanW(r.weekStart, r.goal, r.notes) : null; if (w) weeks.push(w); }
+    } else if (isObj(data.tasks) && isObj(data.notes)) {
+      for (const [date, list] of Object.entries(data.tasks)) {
+        if (!Array.isArray(list)) { skipped++; continue; }
+        for (const r of list) { const t = isObj(r) ? cleanT(date, r.text, r.time, "", r.done) : null; if (t) tasks.push(t); else skipped++; }
+      }
+      for (const [m, text] of Object.entries(data.notes)) { const w = cleanW(m, "", text); if (w) weeks.push(w); }
+    } else {
+      throw new Error("Không nhận ra file này. Hãy chọn file sao lưu của Ai Planner hoặc của bản kế hoạch tuần cũ.");
+    }
+    if (tasks.length > 10000) throw new Error("File có quá nhiều việc (tối đa 10.000).");
+    return { tasks, weeks, skipped };
+  }
+
+  function backupResult(text, error = false) {
+    const el = $("backup-result");
+    el.textContent = text;
+    el.classList.toggle("is-error", error);
+  }
+
+  async function importFile(file) {
+    if (file.size > 5 * 1024 * 1024) return backupResult("File quá lớn (tối đa 5 MB).", true);
+    let parsed;
+    try { parsed = parseBackup(JSON.parse(await file.text())); }
+    catch (e) { return backupResult(e instanceof SyntaxError ? "File không phải JSON hợp lệ." : e.message, true); }
+    flushNotes();
+    backupResult("Đang nhập…");
+    const groups = new Map();
+    const group = (key) => groups.get(key) || groups.set(key, { tasks: [], week: null }).get(key);
+    for (const t of parsed.tasks) group(weekKey(mondayOf(t.date))).tasks.push(t);
+    for (const w of parsed.weeks) group(weekKey(w.weekStart)).week = w;
+    let added = 0, duplicates = 0, skipped = parsed.skipped, weeksChanged = 0;
+    try {
+      for (const [key, g] of [...groups].sort()) {
+        const current = key === weekKey(S.monday);
+        const w = current ? S.week : normalize(await readDoc(key));
+        const seen = new Set();
+        for (const [d, list] of Object.entries(w.days)) for (const t of list) seen.add(d + "|" + t.time + "|" + t.text);
+        let changed = false;
+        for (const t of g.tasks) {
+          const k = t.date + "|" + t.start + "|" + t.title;
+          if (seen.has(k)) { duplicates++; continue; }
+          const list = (w.days[t.date] ||= []);
+          if (list.length >= MAX_PER_DAY) { skipped++; continue; }
+          list.push({ id: uid(), text: t.title, time: t.start, end: t.end, done: t.done });
+          seen.add(k);
+          added++;
+          changed = true;
+        }
+        if (g.week) {
+          const goal = w.goal.trim() ? w.goal : g.week.goal;
+          const inc = g.week.notes.trim();
+          const notes = !inc || w.notes.includes(inc) ? w.notes : w.notes.trim() ? (w.notes + "\n\n" + g.week.notes).slice(0, 5000) : g.week.notes;
+          if (goal !== w.goal || notes !== w.notes) { w.goal = goal; w.notes = notes; weeksChanged++; changed = true; }
+        }
+        if (!changed) continue;
+        if (current) commit();
+        else if (store.kind === "db") await store.col.doc(key).set(clone(w));
+        else localSet(key, clone(w));
+      }
+    } catch {
+      render();
+      return backupResult(`Đã thêm ${added} việc rồi bị gián đoạn. Kiểm tra mạng rồi nhập lại file; việc đã có sẽ không bị thêm trùng.`, true);
+    }
+    render();
+    const parts = [`Đã thêm ${added} việc`];
+    if (duplicates) parts.push(`bỏ qua ${duplicates} việc đã có`);
+    if (skipped) parts.push(`${skipped} mục không đọc được`);
+    if (weeksChanged) parts.push(`cập nhật ghi chú ${weeksChanged} tuần`);
+    backupResult(parts.join(", ") + ".");
+  }
+
+  async function saveFile(filename, text) {
+    if (store.downloads) return store.downloads.save({ filename, data: text });
+    // Normal website: an ordinary browser download.
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  async function exportBackup() {
+    if (!store.downloads && !STANDALONE) return;
+    flushNotes();
+    let entries;
+    try {
+      entries = store.kind === "db"
+        ? (await store.col.limit(1000).get()).docs.map((d) => [d.id, clone(d.data())])
+        : Object.entries(localAll());
+    } catch { return backupResult("Chưa đọc được dữ liệu để sao lưu. Kiểm tra mạng rồi thử lại.", true); }
+    const tasks = [], weeks = [];
+    for (const [key, raw] of entries) {
+      if (!/^w\d{4}-\d{2}-\d{2}$/.test(key)) continue;
+      const w = normalize(raw);
+      for (const [date, list] of Object.entries(w.days)) for (const t of list) tasks.push({ date, title: t.text, startTime: t.time || null, endTime: t.end || null, done: t.done });
+      if (w.goal.trim() || w.notes.trim()) weeks.push({ weekStart: key.slice(1), goal: w.goal, notes: w.notes });
+    }
+    tasks.sort((a, b) => a.date.localeCompare(b.date) || (a.startTime || "99:99").localeCompare(b.startTime || "99:99"));
+    const file = { app: "ai-planner", version: 2, exportedAt: new Date().toISOString(), tasks, weeks };
+    try {
+      await saveFile(`ai-planner-${nowVN().date}.json`, JSON.stringify(file, null, 2));
+      backupResult(`Đã tạo bản sao lưu gồm ${tasks.length} việc.`);
+    } catch (e) {
+      const code = e && e.code;
+      if (code === "declined") return;
+      if (code === "host_unavailable" || code === "unavailable") { $("export-btn").hidden = true; return backupResult("Ứng dụng này không lưu được file. Hãy mở trang trên trình duyệt hoặc máy tính để tải bản sao lưu.", true); }
+      backupResult("Chưa tải được file. Vui lòng thử lại.", true);
+    }
+  }
+
+  // ---- Events ----
+  function wire() {
+    $("prev-week").addEventListener("click", () => openWeek(addDays(S.monday, -7)));
+    $("next-week").addEventListener("click", () => openWeek(addDays(S.monday, 7)));
+    $("this-week").addEventListener("click", () => openWeek(mondayOf(S.now.date)));
+    $("theme-btn").addEventListener("click", toggleTheme);
+    $("strip").addEventListener("click", (e) => {
+      const b = e.target.closest(".strip-day");
+      if (!b) return;
+      S.selected = b.dataset.date;
+      render();
+      document.querySelector(`.strip-day[data-date="${S.selected}"]`)?.focus();
+    });
+    $("days").addEventListener("click", (e) => {
+      const day = e.target.closest(".day");
+      if (!day) return;
+      const el = dayEls[Number(day.dataset.index)], date = day.dataset.date;
+      const row = e.target.closest(".task");
+      if (e.target.closest(".check") && row) return toggle(date, row.dataset.id);
+      if (e.target.closest(".task-main") && row) return openEdit(date, row.dataset.id);
+      if (e.target.closest(".add-toggle")) {
+        el.open = true;
+        renderDay(Number(day.dataset.index), date);
+        el.form.querySelector(".add-title").focus();
+      }
+    });
+    $("days").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const form = e.target, day = form.closest(".day");
+      const title = form.elements.title.value.trim();
+      if (!title) return form.elements.title.focus();
+      if (add(day.dataset.date, title, form.elements.start.value)) form.reset();
+      form.elements.title.focus();
+    });
+    $("days").addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const day = e.target.closest(".day"), form = e.target.closest(".add");
+      if (!day || !form) return;
+      const i = Number(day.dataset.index);
+      if (!dayEls[i].open) return;
+      dayEls[i].open = false;
+      renderDay(i, day.dataset.date);
+      dayEls[i].toggle.focus();
+    });
+    for (const id of ["week-goal", "week-notes"]) {
+      $(id).addEventListener("input", onNotesInput);
+      $(id).addEventListener("blur", flushNotes);
+    }
+    $("save-state").addEventListener("click", (e) => {
+      if (e.target.id !== "retry-save") return;
+      if (store.kind === "db" && !pending.size && !writing.size && !notesDirty) { openWeek(S.monday); return; }
+      flushNotes();
+      retryWrites();
+    });
+    $("toast-btn").addEventListener("click", () => { const act = toastAction; hideToast(); if (act) act(); });
+    $("import-btn").addEventListener("click", () => $("import-file").click());
+    $("import-file").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) importFile(f); });
+    $("export-btn").addEventListener("click", exportBackup);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushNotes(); });
+    window.addEventListener("pagehide", flushNotes);
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderThemeButton);
+    setInterval(() => {
+      const before = S.now.date;
+      S.now = nowVN();
+      if (S.now.date !== before) { render(); return; }
+      weekDays(S.monday).forEach((d, i) => { if (!dayEls[i].root.contains(document.activeElement) || document.activeElement.classList.contains("input")) renderDay(i, d); });
+      renderProgress();
+    }, 30000);
+  }
+
+  // ---- Start ----
+  async function start() {
+    buildDays();
+    wire();
+    renderThemeButton();
+    openWeek(S.monday); // first paint: an empty, loading week
+    let db = null, id = null;
+    try {
+      if (window.claude && typeof window.claude.use === "function") {
+        db = await window.claude.use("db");
+        const user = db ? await window.claude.use("user") : null;
+        id = user ? await user.id() : null;
+      }
+    } catch { db = null; }
+    if (db && id) { store.kind = "db"; store.col = db.collection("data/users/" + id); }
+    else store.kind = "local";
+    try {
+      const saved = store.kind === "db" ? (await readDoc("settings"))?.theme : localStorage.getItem(THEME_KEY);
+      if (saved === "light" || saved === "dark") { S.theme = saved; applyTheme(saved); }
+    } catch { /* default theme */ }
+    openWeek(S.monday);
+    if (STANDALONE) { $("export-btn").hidden = false; return; }
+    try {
+      const downloads = await window.claude.use("downloads");
+      if (downloads) { store.downloads = downloads; $("export-btn").hidden = false; }
+    } catch { /* export stays hidden */ }
+  }
+  start();
+})();
+
+</script>
+</body>
+</html>
