@@ -25,7 +25,7 @@ flowchart LR
 
 ## 2. Luồng sử dụng
 
-1. **Lần đầu:** `/signup` → nhập tên, email, mật khẩu (và mã mời nếu có) → vào `/week`, hôm nay được chọn sẵn. Ngày trống có lời nhắc thêm việc đầu tiên.
+1. **Lần đầu:** `/signup` → nhập tên, email, mật khẩu (và mã mời nếu có), tùy chọn “Ghi nhớ đăng nhập” → vào `/week`, hôm nay được chọn sẵn. Ngày trống có lời nhắc thêm việc đầu tiên.
 2. **Mỗi ngày:** mở web → thấy hôm nay → tích việc đã xong → thanh tiến độ tuần cập nhật ngay.
 3. **Lập kế hoạch:** chọn ngày → nhập tên việc, giờ bắt đầu (tùy chọn) → Thêm. Bấm vào việc để sửa tên, giờ, ngày.
 4. **Xóa:** trong hộp sửa bấm Xóa → việc biến mất, thanh thông báo có nút **Hoàn tác** trong 8 giây.
@@ -135,11 +135,11 @@ src/server              db/schema.ts, auth.ts, http.ts, errors.ts, rate-limit.ts
 
 ## 6. Dữ liệu và API
 
-**Bảng:** `users` (email, tên, mật khẩu đã băm, giao diện), `sessions` (băm SHA-256 của mã phiên), `rate_limits`, `tasks` (ngày, tên, giờ bắt đầu/kết thúc, xong lúc nào), `week_notes` (mục tiêu và ghi chú theo tuần).
+**Bảng:** `users` (email, tên, mật khẩu đã băm, giao diện), `sessions` (băm SHA-256 của mã phiên, cờ `remember`), `rate_limits`, `tasks` (ngày, tên, giờ bắt đầu/kết thúc, xong lúc nào), `week_notes` (mục tiêu và ghi chú theo tuần).
 
 | Phương thức | Đường dẫn | Việc |
 | --- | --- | --- |
-| POST | `/api/auth/signup` · `/login` · `/logout` | Đăng ký, đăng nhập, đăng xuất |
+| POST | `/api/auth/signup` · `/login` · `/logout` | Đăng ký, đăng nhập (kèm `remember`), đăng xuất |
 | GET / PATCH | `/api/me` | Đọc tài khoản, đổi tên hoặc giao diện |
 | POST | `/api/me/password` | Đổi mật khẩu, đăng xuất các thiết bị khác |
 | GET / PUT | `/api/weeks/:monday` | Việc trong tuần + tiến độ tuần trước; lưu mục tiêu, ghi chú |
@@ -150,7 +150,7 @@ src/server              db/schema.ts, auth.ts, http.ts, errors.ts, rate-limit.ts
 ## 7. Bảo mật
 
 - Mật khẩu băm bằng scrypt; cơ sở dữ liệu chỉ giữ SHA-256 của mã phiên.
-- Cookie phiên `httpOnly`, `SameSite=Lax`, tiền tố `__Host-` khi chạy thật.
+- Cookie phiên `httpOnly`, `SameSite=Lax`, tiền tố `__Host-` khi chạy thật. “Ghi nhớ đăng nhập”: 30 ngày và tự gia hạn; nếu không chọn: cookie phiên, hạn 24 giờ, không gia hạn (cột `sessions.remember`).
 - Mọi yêu cầu thay đổi dữ liệu phải cùng nguồn (chặn CSRF); giới hạn số lần đăng nhập, đăng ký.
 - Mọi truy vấn đều lọc theo người đang đăng nhập; mã việc của người khác trả về “không tìm thấy”.
 - Content-Security-Policy, HSTS, chặn nhúng khung khi chạy thật. Không có khóa bí mật nào trong mã nguồn.

@@ -9,9 +9,9 @@ export const POST = open(async ({ req, db }) => {
   const limit = await consumeRateLimit(db, `signup:ip:${clientIp(req)}`, 10, 3600);
   if (!limit.allowed) throw tooMany(limit.retryAfterSeconds);
   const input = await readJson(req, signupSchema, 8 * 1024);
-  const { token, expiresAt } = await signup(db, input);
+  const { token, expiresAt, remember } = await signup(db, input);
   const res = json({ ok: true }, { status: 201 });
-  res.cookies.set(sessionCookie(token, expiresAt));
+  res.cookies.set(sessionCookie(token, remember ? expiresAt : null));
   res.cookies.set(themeCookie("system"));
   return res;
 });

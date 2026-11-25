@@ -27,11 +27,13 @@ export const signupSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   inviteCode: z.string().trim().max(200).default(""),
+  remember: z.boolean().default(false),
 });
 
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Nhập mật khẩu").max(200),
+  remember: z.boolean().default(false),
 });
 
 export const changePasswordSchema = z.object({

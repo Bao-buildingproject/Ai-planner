@@ -3,10 +3,11 @@
  * they only run when TEST_DATABASE_URL points at a database whose name ends in "_test":
  *   TEST_DATABASE_URL=postgres://planner:planner@localhost:5432/ai_planner_test npm run test:integration
  */
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { parseBackup } from "@/lib/backup";
-import { createSession, validateSessionToken } from "@/server/auth";
+import { createSession, SESSION_TTL_DAYS, SHORT_SESSION_HOURS, validateSessionToken } from "@/server/auth";
+import { sessions } from "@/server/db/schema";
 import { closeDb, getDb } from "@/server/db";
 import { AppError } from "@/server/errors";
 import { changePassword, login, signup, updateProfile } from "@/server/services/account";
@@ -52,6 +53,37 @@ describe.skipIf(!testUrl)("services on PostgreSQL", () => {
     const ok = await login(db, { email, password: "matkhau123" });
     expect(ok.userId).toBe(userId);
     expect(ok.theme).toBe("system");
+  });
+
+  it("remember me: a long renewable sign-in, otherwise a short fixed one", async () => {
+    const db = getDb();
+    const { userId } = await newUser();
+    const hours = (d: Date) => (d.getTime() - Date.now()) / 3_600_000;
+    const long = await createSession(db, userId, true);
+    const short = await createSession(db, userId, false);
+    expect(long.remember).toBe(true);
+    expect(short.remember).toBe(false);
+    expect(hours(long.expiresAt)).toBeGreaterThan(SESSION_TTL_DAYS * 24 - 1);
+    expect(hours(short.expiresAt)).toBeLessThan(SHORT_SESSION_HOURS + 0.1);
+    expect(hours(short.expiresAt)).toBeGreaterThan(SHORT_SESSION_HOURS - 1);
+
+    // A long one close to its end is renewed, and the cookie must be refreshed.
+    const nearEnd = new Date(Date.now() + 5 * 86_400_000);
+    await db.update(sessions).set({ expiresAt: nearEnd }).where(eq(sessions.userId, userId));
+    const renewed = await validateSessionToken(db, long.token);
+    expect(renewed?.renewedUntil).not.toBeNull();
+    // A short one is never extended: it ends on schedule.
+    const fixed = await validateSessionToken(db, short.token);
+    expect(fixed?.renewedUntil).toBeNull();
+  });
+
+  it("login and signup carry the remember choice into the session", async () => {
+    const db = getDb();
+    const email = `remember-${Date.now()}@example.com`;
+    const created = await signup(db, { name: "R", email, password: "matkhau123", inviteCode: "", remember: true });
+    expect(created.remember).toBe(true);
+    expect((await login(db, { email, password: "matkhau123" })).remember).toBe(false);
+    expect((await login(db, { email, password: "matkhau123", remember: true })).remember).toBe(true);
   });
 
   it("requires the invite code only when one is set", async () => {

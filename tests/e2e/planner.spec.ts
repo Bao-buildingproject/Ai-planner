@@ -107,6 +107,37 @@ test("đăng xuất, đăng nhập lại và chặn trang khi chưa đăng nhậ
   await page.waitForURL("**/week");
 });
 
+test("ghi nhớ đăng nhập: chỉ có hạn dùng dài khi người dùng tick", async ({ page, context }) => {
+  const { email } = await signUp(page);
+  const sessionCookie = async () => (await context.cookies()).find((c) => c.name.endsWith("aip_session"))!;
+  // Sign-up without the box: a browser-session cookie (no expiry date).
+  expect((await sessionCookie()).expires).toBe(-1);
+
+  await page.goto("/account");
+  await page.getByRole("button", { name: "Đăng xuất" }).click();
+  await page.waitForURL("**/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Mật khẩu", { exact: true }).fill(PASSWORD);
+  await page.getByLabel("Ghi nhớ đăng nhập").check();
+  await page.getByRole("button", { name: "Đăng nhập" }).click();
+  await page.waitForURL("**/week");
+  const remembered = await sessionCookie();
+  const days = (remembered.expires - Date.now() / 1000) / 86400;
+  expect(days).toBeGreaterThan(29);
+  expect(days).toBeLessThan(31);
+
+  // Signing in again without the box goes back to a session cookie.
+  await page.goto("/account");
+  await page.getByRole("button", { name: "Đăng xuất" }).click();
+  await page.waitForURL("**/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Mật khẩu", { exact: true }).fill(PASSWORD);
+  await expect(page.getByLabel("Ghi nhớ đăng nhập")).not.toBeChecked();
+  await page.getByRole("button", { name: "Đăng nhập" }).click();
+  await page.waitForURL("**/week");
+  expect((await sessionCookie()).expires).toBe(-1);
+});
+
 test("nhập file sao lưu của bản kế hoạch tuần cũ", async ({ page }) => {
   await signUp(page);
   const today = todayVN();

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, date, index, integer, pgTable, primaryKey, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, check, date, index, integer, pgTable, primaryKey, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 const TIME_RE = "^([01][0-9]|2[0-3]):[0-5][0-9]$";
 
@@ -27,6 +27,8 @@ export const sessions = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    /** "Remember me" was ticked: a long, renewable sign-in. */
+    remember: boolean("remember").notNull().default(true),
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
 );

@@ -11,6 +11,7 @@ Các ảnh khác (nền tối, máy tính bảng, đăng nhập, sửa việc, t
 ## Tính năng
 
 - **Nhiều tài khoản:** đăng ký, đăng nhập, đăng xuất, đổi mật khẩu. Mỗi người chỉ thấy dữ liệu của mình.
+- **Ghi nhớ đăng nhập:** chọn thì giữ đăng nhập 30 ngày trên thiết bị đó (tự gia hạn khi còn dùng); không chọn thì thoát khi đóng trình duyệt, hoặc sau 24 giờ.
 - **Mã mời (tùy chọn):** đặt biến `INVITE_CODE` thì người mới phải nhập đúng mã mới đăng ký được.
 - **Tuần từ Thứ Hai đến Chủ Nhật:** chuyển tuần trước, tuần sau, quay về tuần này. Số tuần theo chuẩn ISO.
 - **Việc trong ngày:** thêm việc kèm giờ bắt đầu; sửa tên, ngày, giờ bắt đầu và kết thúc; tích xong; xóa có nút **Hoàn tác** trong 8 giây.
@@ -104,7 +105,7 @@ GitHub Actions chạy tất cả các bước trên cho mỗi pull request (`.gi
 ## Bảo mật
 
 - Mật khẩu băm bằng scrypt; cơ sở dữ liệu chỉ lưu mã băm SHA-256 của phiên đăng nhập.
-- Cookie phiên `httpOnly`, `SameSite=Lax`, tiền tố `__Host-` khi chạy thật.
+- Cookie phiên `httpOnly`, `SameSite=Lax`, tiền tố `__Host-` khi chạy thật. Không chọn “Ghi nhớ đăng nhập” thì đó là cookie phiên (hết khi đóng trình duyệt) và máy chủ chỉ chấp nhận trong 24 giờ, không gia hạn.
 - Chặn yêu cầu thay đổi dữ liệu từ trang web khác (kiểm tra `Origin`); giới hạn số lần đăng nhập, đăng ký, đổi mật khẩu, nhập file.
 - Mọi truy vấn đều lọc theo người đang đăng nhập; việc của người khác luôn trả về “không tìm thấy”.
 - Content-Security-Policy, HSTS và chặn nhúng trang khi chạy thật.

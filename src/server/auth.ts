@@ -54,7 +54,10 @@ export async function burnPasswordCheck(password: string): Promise<void> {
 // Sessions: random token in an httpOnly cookie, only its SHA-256 in the database.
 // ---------------------------------------------------------------------------
 
+/** "Remember me": the sign-in lasts this long, and is renewed while it is used. */
 export const SESSION_TTL_DAYS = 30;
+/** Without "remember me": the cookie ends with the browser session, and the server stops accepting it after this. */
+export const SHORT_SESSION_HOURS = 24;
 const RENEW_WHEN_DAYS_LEFT = 15;
 const DAY_MS = 86_400_000;
 
@@ -71,13 +74,18 @@ export function newSessionToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
-export async function createSession(db: DbOrTx, userId: string): Promise<{ token: string; expiresAt: Date }> {
+export async function createSession(
+  db: DbOrTx,
+  userId: string,
+  remember = true,
+): Promise<{ token: string; expiresAt: Date; remember: boolean }> {
   const token = newSessionToken();
-  const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * DAY_MS);
-  await db.insert(sessions).values({ id: hashToken(token), userId, expiresAt });
+  const lifetimeMs = remember ? SESSION_TTL_DAYS * DAY_MS : SHORT_SESSION_HOURS * 3_600_000;
+  const expiresAt = new Date(Date.now() + lifetimeMs);
+  await db.insert(sessions).values({ id: hashToken(token), userId, expiresAt, remember });
   // Opportunistic cleanup of this user's expired sessions.
   await db.delete(sessions).where(and(eq(sessions.userId, userId), lt(sessions.expiresAt, new Date())));
-  return { token, expiresAt };
+  return { token, expiresAt, remember };
 }
 
 export interface SessionUser {
@@ -99,6 +107,7 @@ export async function validateSessionToken(db: DbOrTx, token: string | undefined
   const rows = await db
     .select({
       expiresAt: sessions.expiresAt,
+      remember: sessions.remember,
       user: { id: users.id, email: users.email, name: users.name, theme: users.theme },
     })
     .from(sessions)
@@ -108,7 +117,8 @@ export async function validateSessionToken(db: DbOrTx, token: string | undefined
   const found = rows[0];
   if (!found) return null;
   let renewedUntil: Date | null = null;
-  if (found.expiresAt.getTime() - Date.now() < RENEW_WHEN_DAYS_LEFT * DAY_MS) {
+  // Only remembered sign-ins are renewed; a short one ends on schedule.
+  if (found.remember && found.expiresAt.getTime() - Date.now() < RENEW_WHEN_DAYS_LEFT * DAY_MS) {
     renewedUntil = new Date(Date.now() + SESSION_TTL_DAYS * DAY_MS);
     await db.update(sessions).set({ expiresAt: renewedUntil }).where(eq(sessions.id, id));
   }
@@ -125,7 +135,8 @@ export async function invalidateUserSessions(db: DbOrTx, userId: string, exceptT
   for (const s of all) if (s.id !== keep) await db.delete(sessions).where(eq(sessions.id, s.id));
 }
 
-export function sessionCookie(token: string, expiresAt: Date) {
+/** `expiresAt: null` makes a browser-session cookie (gone when the browser closes). */
+export function sessionCookie(token: string, expiresAt: Date | null) {
   return {
     name: SESSION_COOKIE,
     value: token,
@@ -133,7 +144,7 @@ export function sessionCookie(token: string, expiresAt: Date) {
     secure: secureCookies,
     sameSite: "lax" as const,
     path: "/",
-    expires: expiresAt,
+    ...(expiresAt ? { expires: expiresAt } : {}),
   };
 }
 

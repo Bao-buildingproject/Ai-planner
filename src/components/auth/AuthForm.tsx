@@ -17,14 +17,15 @@ export function AuthForm({ mode, inviteRequired = false }: { mode: "login" | "si
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const get = (key: string) => String(form.get(key) ?? "");
+    const remember = form.get("remember") === "on";
     setBusy(true);
     setError(null);
     try {
       await api(signup ? "/api/auth/signup" : "/api/auth/login", {
         method: "POST",
         body: signup
-          ? { name: get("name"), email: get("email"), password: get("password"), inviteCode: get("inviteCode") }
-          : { email: get("email"), password: get("password") },
+          ? { name: get("name"), email: get("email"), password: get("password"), inviteCode: get("inviteCode"), remember }
+          : { email: get("email"), password: get("password"), remember },
       });
       router.replace("/week");
       router.refresh();
@@ -121,6 +122,15 @@ export function AuthForm({ mode, inviteRequired = false }: { mode: "login" | "si
             </span>
           </div>
         )}
+        <div className="remember">
+          <label className="check-field" htmlFor="remember">
+            <input id="remember" type="checkbox" name="remember" aria-describedby="remember-hint" />
+            Ghi nhớ đăng nhập
+          </label>
+          <span id="remember-hint" className="hint">
+            Giữ đăng nhập 30 ngày trên thiết bị này. Không chọn thì thoát khi đóng trình duyệt, hoặc sau 24 giờ.
+          </span>
+        </div>
         <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
           {busy && <LoaderCircle className="spin" aria-hidden="true" />}
           {busy ? "Đang xử lý…" : signup ? "Tạo tài khoản" : "Đăng nhập"}

@@ -12,10 +12,10 @@ export const POST = open(async ({ req, db }) => {
   const emailKey = `login:email:${input.email}`;
   const emailLimit = await consumeRateLimit(db, emailKey, 10, 900);
   if (!emailLimit.allowed) throw tooMany(emailLimit.retryAfterSeconds);
-  const { token, expiresAt, theme } = await login(db, input);
+  const { token, expiresAt, remember, theme } = await login(db, input);
   await resetRateLimit(db, emailKey);
   const res = json({ ok: true });
-  res.cookies.set(sessionCookie(token, expiresAt));
+  res.cookies.set(sessionCookie(token, remember ? expiresAt : null));
   res.cookies.set(themeCookie(theme));
   return res;
 });

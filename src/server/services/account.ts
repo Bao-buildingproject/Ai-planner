@@ -28,7 +28,10 @@ function isUniqueViolation(error: unknown): boolean {
 
 const EMAIL_TAKEN = "Email này đã được đăng ký. Hãy đăng nhập.";
 
-export async function signup(db: Db, input: { name: string; email: string; password: string; inviteCode: string }) {
+export async function signup(
+  db: Db,
+  input: { name: string; email: string; password: string; inviteCode: string; remember?: boolean },
+) {
   if (!inviteMatches(input.inviteCode)) {
     logEvent("warn", "signup_failed", { reason: "bad_invite" });
     throw new AppError(403, "Mã mời không đúng. Hãy hỏi lại người đã mời bạn.", "bad_invite");
@@ -42,7 +45,7 @@ export async function signup(db: Db, input: { name: string; email: string; passw
         .insert(users)
         .values({ email: input.email, name: input.name, passwordHash })
         .returning({ id: users.id });
-      const session = await createSession(tx, user!.id);
+      const session = await createSession(tx, user!.id, input.remember ?? false);
       logEvent("info", "signup", { userId: user!.id });
       return { userId: user!.id, ...session };
     });
@@ -53,7 +56,7 @@ export async function signup(db: Db, input: { name: string; email: string; passw
   }
 }
 
-export async function login(db: Db, input: { email: string; password: string }) {
+export async function login(db: Db, input: { email: string; password: string; remember?: boolean }) {
   const [user] = await db
     .select({ id: users.id, passwordHash: users.passwordHash, theme: users.theme })
     .from(users)
@@ -68,7 +71,7 @@ export async function login(db: Db, input: { email: string; password: string }) 
     logEvent("warn", "login_failed", { userId: user.id, reason: "bad_password" });
     throw new AppError(401, "Email hoặc mật khẩu không đúng", "invalid_credentials");
   }
-  const session = await createSession(db, user.id);
+  const session = await createSession(db, user.id, input.remember ?? false);
   logEvent("info", "login", { userId: user.id });
   return { userId: user.id, theme: user.theme, ...session };
 }
