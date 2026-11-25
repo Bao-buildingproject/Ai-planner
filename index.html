@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="vi">
+<html lang="vi" class="standalone">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Ai Planner: sổ kế hoạch tuần. Ghi việc theo từng ngày, tích khi xong, xem tiến độ cả tuần, mục tiêu và ghi chú.">
+<meta name="description" content="Ai Planner: sổ kế hoạch tuần. Mỗi người một tài khoản, ghi việc theo ngày, tích khi xong, xem tiến độ cả tuần, mục tiêu và ghi chú.">
 <meta name="theme-color" content="#f3f6f9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1727" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Crect x='1' y='4' width='32' height='29' rx='9' fill='%231b2a4a'/%3E%3Cpath d='M10.5 1.8v5.4M23.5 1.8v5.4' stroke='%231b2a4a' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M9.6 19.2c1.9 1.2 3.4 2.9 4.6 5 2.5-5.4 6.1-9.6 10.6-12.9' fill='none' stroke='%23d9f36b' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -187,6 +187,23 @@ button:disabled {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-2);
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 50;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--ink);
+  color: var(--on-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
 }
 
 /* ---------- Controls ---------- */
@@ -381,6 +398,25 @@ input[type="date"].input {
 
 /* ---------- App frame ---------- */
 
+:root {
+  --cover: #1b2a4a;
+  --cover-ink: #f3f6f9;
+  --cover-ink-2: #b9c6dd;
+  --cover-grid: rgb(255 255 255 / 0.07);
+  --cover-hl: #d9f36b;
+  --cover-hl-ink: #1b2a4a;
+}
+
+:root[data-theme="dark"] {
+  --cover: #16223d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --cover: #16223d;
+  }
+}
+
 body::before {
   content: "";
   position: fixed;
@@ -426,6 +462,58 @@ body::before {
   flex: none;
 }
 
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+  min-height: 40px;
+  padding: 4px 14px 4px 4px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--sheet);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color var(--t-fast);
+}
+
+.account-chip:hover {
+  border-color: var(--ink-2);
+}
+
+.account-chip[aria-current="page"] {
+  border-color: var(--ink);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--hl);
+  color: var(--hl-ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.account-chip .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .account-chip {
+    padding-right: 4px;
+  }
+  .account-chip .name {
+    display: none;
+  }
+}
+
 .page {
   max-width: 1320px;
   margin: 0 auto;
@@ -439,6 +527,184 @@ body::before {
   .topbar-inner {
     padding-left: max(32px, env(safe-area-inset-left, 0px));
     padding-right: max(32px, env(safe-area-inset-right, 0px));
+  }
+}
+
+/* ---------- Sign in / sign up ---------- */
+
+.auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.auth-cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 48px clamp(24px, 5vw, 80px);
+  background-color: var(--cover);
+  background-image:
+    linear-gradient(var(--cover-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cover-grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--cover-ink);
+}
+
+.auth-cover .brand {
+  color: var(--cover-ink);
+}
+
+.auth-cover h1 {
+  max-width: 13ch;
+  font-size: clamp(34px, 4.6vw, 58px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.auth-cover .lead {
+  max-width: 42ch;
+  margin-top: 18px;
+  color: var(--cover-ink-2);
+  font-size: 17px;
+}
+
+.marker {
+  padding: 0 0.12em;
+  border-radius: 0.12em;
+  background: linear-gradient(var(--cover-hl), var(--cover-hl)) no-repeat 0 62% / 100% 74%;
+  color: var(--cover-hl-ink);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.auth-points {
+  display: grid;
+  gap: 14px;
+  max-width: 46ch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-points li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  color: var(--cover-ink-2);
+}
+
+.auth-points svg {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 10px;
+  color: var(--cover-hl);
+}
+
+.auth-points b {
+  display: block;
+  color: var(--cover-ink);
+  font-weight: 600;
+}
+
+.auth-main {
+  display: grid;
+  place-items: center;
+  padding: 48px max(16px, 4vw);
+}
+
+.auth-card {
+  display: grid;
+  gap: 22px;
+  width: min(100%, 420px);
+  padding: 32px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+}
+
+.auth-card h2 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.auth-card form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-switch {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.auth-switch a {
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap .input {
+  padding-right: 48px;
+}
+
+.password-wrap button {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.password-wrap svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 899px) {
+  .auth {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+  .auth-cover {
+    gap: 28px;
+    padding: 28px max(16px, 5vw) 32px;
+  }
+  .auth-cover h1 {
+    max-width: 16ch;
+    font-size: clamp(30px, 8vw, 40px);
+  }
+  .auth-cover .lead {
+    margin-top: 12px;
+    font-size: 15px;
+  }
+  .auth-points {
+    display: none;
+  }
+  .auth-main {
+    place-items: start center;
+    padding-top: 24px;
+  }
+  .auth-card {
+    padding: 24px;
   }
 }
 
@@ -1163,7 +1429,10 @@ body::before {
   }
 }
 
-
+.auth-cover .brand-mark {
+  --ink: var(--cover-hl);
+  --hl: var(--cover-hl-ink);
+}
 
 .link-btn {
   padding: 0;
@@ -1250,16 +1519,217 @@ body::before {
   }
 }
 
+/* ---------- Accounts on the normal website ---------- */
+
+#auth-screen {
+  display: none;
+}
+
+html.standalone:not(.signed-in) #auth-screen {
+  display: grid;
+}
+
+html.standalone:not(.signed-in) #topbar,
+html.standalone:not(.signed-in) #main,
+html.standalone:not(.signed-in) body::before {
+  display: none;
+}
+
+.auth-main {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.auth-card form[hidden] {
+  display: none;
+}
+
+.auth-card .hint {
+  font-size: 12.5px;
+}
+
+.auth-note {
+  padding-top: 14px;
+  border-top: 1px dashed var(--rule);
+}
+
+.auth-switch .link-btn {
+  color: var(--ink);
+}
+
+.remember {
+  display: grid;
+  gap: 2px;
+}
+
+.remember .check-field {
+  min-height: 36px;
+}
+
+.acct-list {
+  display: grid;
+  gap: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 4px 14px 4px 4px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  transition: border-color var(--t-fast);
+}
+
+.chip:hover {
+  border-color: var(--ink-2);
+}
+
+.account-chip {
+  cursor: pointer;
+}
+
+.password-wrap svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.acct-form {
+  display: grid;
+  gap: 12px;
+}
+
+.acct-form h3 {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.ok-text {
+  color: var(--ok);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ok-text:empty {
+  display: none;
+}
+
+.danger-zone {
+  padding-top: 12px;
+  border-top: 1px dashed var(--rule);
+}
+
+.danger-zone summary {
+  min-height: 36px;
+  color: var(--late);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.danger-zone[open] summary {
+  margin-bottom: 10px;
+}
+
 </style>
 </head>
 <body>
-<header class="topbar">
+<div class="auth" id="auth-screen">
+  <section class="auth-cover" aria-label="Giới thiệu Ai Planner">
+    <span class="brand"><svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true" focusable="false"><rect x="1" y="4" width="32" height="29" rx="9" fill="var(--ink)"/><path d="M10.5 1.8v5.4M23.5 1.8v5.4" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/><path d="M9.6 19.2c1.9 1.2 3.4 2.9 4.6 5 2.5-5.4 6.1-9.6 10.6-12.9" fill="none" stroke="var(--hl)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ai Planner</span></span>
+    <div>
+      <h1>Sổ kế hoạch tuần <span class="marker">của riêng bạn</span></h1>
+      <p class="lead">Mỗi người một tài khoản, kế hoạch riêng. Mở lên là thấy việc hôm nay và cả tuần đã đi được bao xa.</p>
+    </div>
+    <ul class="auth-points">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span><b>Nhiều tài khoản trên một máy</b>Mỗi người có kế hoạch và mật khẩu riêng.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M9 16l2 2 4-4"/></svg><span><b>Việc xong được tô dạ quang</b>Tiến độ tuần tự tính, so với tuần trước.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span><b>Ghi nhớ đăng nhập</b>Tùy chọn, giữ 30 ngày trên máy của bạn.</span></li>
+    </ul>
+  </section>
+  <div class="auth-main">
+    <div class="auth-card">
+      <div>
+        <h2 id="auth-title">Đăng nhập</h2>
+        <p class="auth-switch" id="auth-switch"></p>
+      </div>
+      <p class="form-error" id="auth-error" role="alert" hidden></p>
+      <div class="acct-list" id="acct-list" hidden>
+        <span class="hint">Tài khoản trên máy này</span>
+        <div class="chips" id="acct-chips"></div>
+      </div>
+      <form id="login-form" method="post" novalidate>
+        <div class="field">
+          <label class="field-label" for="login-name">Tên đăng nhập</label>
+          <input id="login-name" class="input" name="username" autocomplete="username" maxlength="60" autocapitalize="none" spellcheck="false">
+        </div>
+        <div class="field">
+          <label class="field-label" for="login-pass">Mật khẩu</label>
+          <div class="password-wrap">
+            <input id="login-pass" class="input" name="password" type="password" autocomplete="current-password" maxlength="200">
+            <button type="button" id="toggle-login-pass" aria-label="Hiện mật khẩu" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div class="remember">
+          <label class="check-field"><input type="checkbox" id="login-remember"> Ghi nhớ đăng nhập</label>
+          <span class="hint">Giữ đăng nhập 30 ngày trên máy này. Không chọn thì thoát khi đóng tab.</span>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Đăng nhập</button>
+      </form>
+      <form id="signup-form" method="post" novalidate hidden>
+        <div class="field">
+          <label class="field-label" for="signup-name">Tên đăng nhập</label>
+          <input id="signup-name" class="input" name="username" autocomplete="username" maxlength="60" autocapitalize="none" spellcheck="false" aria-describedby="signup-name-hint">
+          <span class="hint" id="signup-name-hint">Từ 2 đến 30 ký tự.</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="signup-pass">Mật khẩu</label>
+          <div class="password-wrap">
+            <input id="signup-pass" class="input" name="password" type="password" autocomplete="new-password" maxlength="200" aria-describedby="signup-pass-hint">
+            <button type="button" id="toggle-signup-pass" aria-label="Hiện mật khẩu" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+          <span class="hint" id="signup-pass-hint">Tối thiểu 8 ký tự.</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="signup-pass2">Nhập lại mật khẩu</label>
+          <input id="signup-pass2" class="input" name="password2" type="password" autocomplete="new-password" maxlength="200">
+        </div>
+        <div class="remember">
+          <label class="check-field"><input type="checkbox" id="signup-remember"> Ghi nhớ đăng nhập</label>
+          <span class="hint">Giữ đăng nhập 30 ngày trên máy này. Không chọn thì thoát khi đóng tab.</span>
+        </div>
+        <div class="remember" id="adopt-field" hidden>
+          <label class="check-field"><input type="checkbox" id="adopt-box" checked> Đưa kế hoạch đã có trên máy này vào tài khoản</label>
+          <span class="hint">Chỉ sao chép, kế hoạch cũ vẫn được giữ nguyên.</span>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Tạo tài khoản</button>
+      </form>
+      <p class="hint auth-note">Tài khoản chỉ có trên máy này: kế hoạch lưu trong trình duyệt và không gửi đi đâu. Mật khẩu giúp người dùng chung máy không mở nhầm kế hoạch của nhau, không phải mã hóa dữ liệu. Quên mật khẩu thì không khôi phục được, nên hãy tải bản sao lưu.</p>
+    </div>
+  </div>
+</div>
+<header class="topbar" id="topbar">
   <div class="topbar-inner">
     <span class="brand">
       <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true" focusable="false"><rect x="1" y="4" width="32" height="29" rx="9" fill="var(--ink)"/><path d="M10.5 1.8v5.4M23.5 1.8v5.4" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/><path d="M9.6 19.2c1.9 1.2 3.4 2.9 4.6 5 2.5-5.4 6.1-9.6 10.6-12.9" fill="none" stroke="var(--hl)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>Ai Planner</span>
     </span>
     <button type="button" class="icon-btn" id="theme-btn" aria-label="Đổi nền sáng hoặc tối"></button>
+    <button type="button" class="account-chip" id="account-btn" hidden><span class="avatar" id="account-avatar" aria-hidden="true"></span><span class="name" id="account-name"></span></button>
   </div>
 </header>
 <main class="page" id="main">
@@ -1350,6 +1820,38 @@ body::before {
   </form>
 </dialog>
 
+<dialog class="sheet-dialog" id="account-dialog" aria-labelledby="account-title">
+  <div class="dialog-body">
+    <div class="dialog-head">
+      <h2 id="account-title">Tài khoản</h2>
+      <button type="button" class="icon-btn" id="account-close" aria-label="Đóng"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <p class="hint" id="account-who"></p>
+    <label class="check-field"><input type="checkbox" id="remember-toggle"> Ghi nhớ đăng nhập trên máy này</label>
+    <form class="acct-form" id="password-form" novalidate>
+      <h3>Đổi mật khẩu</h3>
+      <p class="form-error" id="pw-error" role="alert" hidden></p>
+      <p class="ok-text" id="pw-ok" role="status"></p>
+      <div class="field"><label class="field-label" for="pw-current">Mật khẩu hiện tại</label><input id="pw-current" class="input" type="password" autocomplete="current-password" maxlength="200"></div>
+      <div class="field"><label class="field-label" for="pw-new">Mật khẩu mới</label><input id="pw-new" class="input" type="password" autocomplete="new-password" maxlength="200"></div>
+      <div class="field"><label class="field-label" for="pw-new2">Nhập lại mật khẩu mới</label><input id="pw-new2" class="input" type="password" autocomplete="new-password" maxlength="200"></div>
+      <button type="submit" class="btn">Đổi mật khẩu</button>
+    </form>
+    <details class="danger-zone" id="delete-zone">
+      <summary>Xóa tài khoản này</summary>
+      <form class="acct-form" id="delete-form" novalidate>
+        <p class="hint">Xóa toàn bộ kế hoạch của tài khoản này khỏi máy và không hoàn tác được. Hãy tải bản sao lưu trước.</p>
+        <p class="form-error" id="del-error" role="alert" hidden></p>
+        <div class="field"><label class="field-label" for="del-pass">Nhập mật khẩu để xác nhận</label><input id="del-pass" class="input" type="password" autocomplete="current-password" maxlength="200"></div>
+        <button type="submit" class="btn btn-danger">Xóa vĩnh viễn</button>
+      </form>
+    </details>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-primary" id="logout-btn">Đăng xuất</button>
+    </div>
+  </div>
+</dialog>
+
 <div class="toast-region" aria-live="polite" aria-atomic="true">
   <div class="toast" id="toast" hidden><p id="toast-text"></p><button type="button" id="toast-btn">Hoàn tác</button></div>
 </div>
@@ -1361,6 +1863,8 @@ body::before {
   const DAY_SHORT = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
   const LOCAL_KEY = "ai-planner-v1"; // same key as the earlier version of this page
   const THEME_KEY = "ai-planner-theme";
+  let dataKey = LOCAL_KEY;   // standalone site: switches to one key per account
+  let themeKey = THEME_KEY;
   const MAX_PER_DAY = 100;
   const $ = (id) => document.getElementById(id);
   // Opened as a normal website (e.g. GitHub Pages) rather than inside claude.ai.
@@ -1444,9 +1948,9 @@ body::before {
   const writing = new Set();
   let modeNote = "";
 
-  function localAll() { try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || {}; } catch { return {}; } }
+  function localAll() { try { return JSON.parse(localStorage.getItem(dataKey)) || {}; } catch { return {}; } }
   function localSet(key, value) {
-    try { const all = localAll(); all[key] = value; localStorage.setItem(LOCAL_KEY, JSON.stringify(all)); return true; } catch { return false; }
+    try { const all = localAll(); all[key] = value; localStorage.setItem(dataKey, JSON.stringify(all)); return true; } catch { return false; }
   }
 
   async function readDoc(key) {
@@ -1506,6 +2010,271 @@ body::before {
 
   function retryWrites() { for (const key of [...pending.keys()]) void flush(key, 0); }
 
+  // ---- Accounts on this device (the normal website, e.g. GitHub Pages) ----
+  // No server: each account is a name + password check, with its own plan in this browser.
+  const ACC_KEY = "ai-planner-accounts";
+  const SESSION_KEY = "ai-planner-session";
+  const PREF_KEY = "ai-planner-login-pref";
+  const ADOPTED_KEY = "ai-planner-legacy-adopted";
+  const REMEMBER_MS = 30 * DAY_MS;
+  const ITER = 200000;
+  const MAX_ACCOUNTS = 20;
+  let me = null;          // { id, name } once signed in
+  let failedLogins = 0, lockedUntil = 0;
+
+  const enc = new TextEncoder();
+  const b64 = (u8) => btoa(String.fromCharCode(...u8));
+  const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const nameKey = (n) => n.normalize("NFKC").trim().toLowerCase();
+
+  async function derive(password, salt, iter) {
+    const key = await crypto.subtle.importKey("raw", enc.encode(password.normalize("NFKC")), "PBKDF2", false, ["deriveBits"]);
+    return new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, key, 256));
+  }
+  async function checkPassword(acc, password) {
+    const got = await derive(password, unb64(acc.salt), acc.iter);
+    const want = unb64(acc.hash);
+    if (got.length !== want.length) return false;
+    let diff = 0;
+    for (let i = 0; i < got.length; i++) diff |= got[i] ^ want[i];
+    return diff === 0;
+  }
+  async function newCredentials(password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    return { salt: b64(salt), hash: b64(await derive(password, salt, ITER)), iter: ITER };
+  }
+
+  function loadAccounts() {
+    try {
+      const list = JSON.parse(localStorage.getItem(ACC_KEY));
+      return Array.isArray(list) ? list.filter((a) => a && typeof a.id === "string" && typeof a.name === "string" && typeof a.key === "string" && a.salt && a.hash) : [];
+    } catch { return []; }
+  }
+  function saveAccounts(list) {
+    try { localStorage.setItem(ACC_KEY, JSON.stringify(list)); return true; } catch { return false; }
+  }
+  function readPref() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch { return {}; } }
+  function savePref(remember, name) { try { localStorage.setItem(PREF_KEY, JSON.stringify({ remember, name: remember ? name : "" })); } catch { /* optional */ } }
+
+  // "Remember me" keeps the sign-in 30 days in this browser; otherwise it ends with the tab.
+  function readSession() {
+    for (const st of [sessionStorage, localStorage]) {
+      try {
+        const v = JSON.parse(st.getItem(SESSION_KEY));
+        if (v && typeof v.id === "string" && (st === sessionStorage || (typeof v.until === "number" && v.until > Date.now()))) return { id: v.id, remember: st === localStorage };
+      } catch { /* try the next place */ }
+    }
+    return null;
+  }
+  function clearSession() { for (const st of [sessionStorage, localStorage]) try { st.removeItem(SESSION_KEY); } catch { /* ignore */ } }
+  function writeSession(id, remember) {
+    clearSession();
+    try { (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, JSON.stringify(remember ? { id, until: Date.now() + REMEMBER_MS } : { id })); return true; } catch { return false; }
+  }
+
+  function hasLegacy() {
+    try {
+      if (localStorage.getItem(ADOPTED_KEY)) return false;
+      const old = JSON.parse(localStorage.getItem(LOCAL_KEY));
+      return !!old && typeof old === "object" && Object.keys(old).length > 0;
+    } catch { return false; }
+  }
+
+  // ---- Sign-in screen ----
+  function authError(message) {
+    const el = $("auth-error");
+    el.hidden = !message;
+    el.innerHTML = message ? ICON.alert + esc(message) : "";
+  }
+  function setBusy(form, busy) {
+    form.querySelector('[type="submit"]').disabled = busy;
+    form.setAttribute("aria-busy", String(busy));
+  }
+  function setAuthMode(mode) {
+    $("login-form").hidden = mode !== "login";
+    $("signup-form").hidden = mode !== "signup";
+    $("auth-title").textContent = mode === "login" ? "Đăng nhập" : "Tạo tài khoản";
+    $("auth-switch").innerHTML = mode === "login"
+      ? 'Chưa có tài khoản? <button type="button" class="link-btn" data-mode="signup">Tạo tài khoản</button>'
+      : 'Đã có tài khoản? <button type="button" class="link-btn" data-mode="login">Đăng nhập</button>';
+    $("adopt-field").hidden = !hasLegacy();
+    authError(null);
+    const accounts = loadAccounts();
+    $("acct-list").hidden = mode !== "login" || !accounts.length;
+    $("acct-chips").innerHTML = accounts.map((a) => `<button type="button" class="chip" data-name="${esc(a.name)}"><span class="avatar" aria-hidden="true">${esc((Array.from(a.name)[0] || "?").toUpperCase())}</span>${esc(a.name)}</button>`).join("");
+    const pref = readPref();
+    if (mode === "login") {
+      if (pref.name && !$("login-name").value) $("login-name").value = pref.name;
+      $("login-remember").checked = pref.remember === true;
+      (($("login-name").value ? $("login-pass") : $("login-name"))).focus();
+    } else {
+      $("signup-remember").checked = pref.remember === true;
+      $("signup-name").focus();
+    }
+  }
+  function showAuth() {
+    document.documentElement.classList.remove("signed-in");
+    setAuthMode(loadAccounts().length ? "login" : "signup");
+  }
+
+  function enterApp(acc) {
+    me = { id: acc.id, name: acc.name };
+    dataKey = "ai-planner-data:" + acc.id;
+    themeKey = "ai-planner-theme:" + acc.id;
+    store.kind = "local";
+    document.documentElement.classList.add("signed-in");
+    $("account-btn").hidden = false;
+    $("account-avatar").textContent = (Array.from(acc.name)[0] || "?").toUpperCase();
+    $("account-name").textContent = acc.name;
+    $("account-btn").setAttribute("aria-label", "Tài khoản: " + acc.name);
+    try {
+      const saved = localStorage.getItem(themeKey);
+      if (saved === "light" || saved === "dark") { S.theme = saved; applyTheme(saved); }
+    } catch { /* default theme */ }
+    $("export-btn").hidden = false;
+    openWeek(mondayOf(nowVN().date));
+  }
+
+  async function onLogin(e) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    if (Date.now() < lockedUntil) return authError(`Bạn nhập sai nhiều lần. Thử lại sau ${Math.ceil((lockedUntil - Date.now()) / 1000)} giây.`);
+    const name = $("login-name").value, pass = $("login-pass").value, remember = $("login-remember").checked;
+    if (!name.trim() || !pass) return authError("Nhập tên đăng nhập và mật khẩu.");
+    setBusy(form, true);
+    authError(null);
+    try {
+      const acc = loadAccounts().find((a) => a.key === nameKey(name));
+      const ok = acc ? await checkPassword(acc, pass) : (await derive(pass, new Uint8Array(16), ITER), false);
+      if (!ok) {
+        if (++failedLogins >= 5) { failedLogins = 0; lockedUntil = Date.now() + 30000; }
+        return authError("Tên đăng nhập hoặc mật khẩu không đúng.");
+      }
+      failedLogins = 0;
+      savePref(remember, acc.name);
+      if (!writeSession(acc.id, remember)) return authError("Trình duyệt đang chặn lưu dữ liệu nên không đăng nhập được.");
+      form.reset();
+      enterApp(acc);
+    } catch { authError("Trình duyệt này chưa hỗ trợ đăng nhập. Hãy mở bằng Chrome, Safari hoặc Edge bản mới."); }
+    finally { setBusy(form, false); }
+  }
+
+  async function onSignup(e) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const name = $("signup-name").value.trim().replace(/\s+/g, " "), pass = $("signup-pass").value;
+    const remember = $("signup-remember").checked;
+    const accounts = loadAccounts();
+    if (Array.from(name).length < 2 || Array.from(name).length > 30) return authError("Tên đăng nhập dài từ 2 đến 30 ký tự.");
+    if (accounts.some((a) => a.key === nameKey(name))) return authError("Tên đăng nhập này đã có trên máy này. Hãy chọn tên khác hoặc đăng nhập.");
+    if (accounts.length >= MAX_ACCOUNTS) return authError(`Máy này đã có ${MAX_ACCOUNTS} tài khoản, là mức tối đa.`);
+    if (pass.length < 8) return authError("Mật khẩu tối thiểu 8 ký tự.");
+    if (pass.length > 200) return authError("Mật khẩu tối đa 200 ký tự.");
+    if (pass !== $("signup-pass2").value) return authError("Hai lần nhập mật khẩu chưa khớp nhau.");
+    setBusy(form, true);
+    authError(null);
+    try {
+      const acc = { id: crypto.randomUUID ? crypto.randomUUID() : uid(), name, key: nameKey(name), ...(await newCredentials(pass)), created: Date.now() };
+      if (!saveAccounts([...accounts, acc])) return authError("Trình duyệt đang chặn lưu dữ liệu nên chưa tạo được tài khoản.");
+      if (!$("adopt-field").hidden && $("adopt-box").checked) {
+        // Copy, never move: the earlier plan stays where it was.
+        try {
+          const old = localStorage.getItem(LOCAL_KEY);
+          if (old) localStorage.setItem("ai-planner-data:" + acc.id, old);
+          const oldTheme = localStorage.getItem(THEME_KEY);
+          if (oldTheme) localStorage.setItem("ai-planner-theme:" + acc.id, oldTheme);
+          localStorage.setItem(ADOPTED_KEY, acc.id);
+        } catch { /* the account still works, just empty */ }
+      }
+      savePref(remember, acc.name);
+      if (!writeSession(acc.id, remember)) return authError("Đã tạo tài khoản nhưng trình duyệt chặn lưu phiên. Hãy đăng nhập lại.");
+      form.reset();
+      enterApp(acc);
+    } catch { authError("Trình duyệt này chưa hỗ trợ tạo tài khoản. Hãy mở bằng Chrome, Safari hoặc Edge bản mới."); }
+    finally { setBusy(form, false); }
+  }
+
+  // ---- Account dialog (signed in) ----
+  const acctDialog = () => $("account-dialog");
+  function openAccount() {
+    $("account-who").textContent = "Đang đăng nhập: " + me.name;
+    $("remember-toggle").checked = !!(readSession() && readSession().remember);
+    for (const id of ["pw-error", "del-error"]) $(id).hidden = true;
+    $("pw-ok").textContent = "";
+    $("password-form").reset();
+    $("delete-form").reset();
+    $("delete-zone").open = false;
+    acctDialog().showModal();
+  }
+  function dialogError(id, message) { const el = $(id); el.innerHTML = message ? ICON.alert + esc(message) : ""; el.hidden = !message; }
+
+  async function onChangePassword(e) {
+    e.preventDefault();
+    const acc = loadAccounts().find((a) => a.id === me.id);
+    const cur = $("pw-current").value, next = $("pw-new").value;
+    $("pw-ok").textContent = "";
+    if (!acc) return dialogError("pw-error", "Không tìm thấy tài khoản này trên máy.");
+    if (next.length < 8) return dialogError("pw-error", "Mật khẩu mới tối thiểu 8 ký tự.");
+    if (next.length > 200) return dialogError("pw-error", "Mật khẩu tối đa 200 ký tự.");
+    if (next !== $("pw-new2").value) return dialogError("pw-error", "Hai lần nhập mật khẩu mới chưa khớp nhau.");
+    if (cur === next) return dialogError("pw-error", "Mật khẩu mới phải khác mật khẩu hiện tại.");
+    try {
+      if (!(await checkPassword(acc, cur))) return dialogError("pw-error", "Mật khẩu hiện tại không đúng.");
+      const fresh = await newCredentials(next);
+      const updated = loadAccounts().map((a) => (a.id === acc.id ? { ...a, ...fresh } : a));
+      if (!saveAccounts(updated)) return dialogError("pw-error", "Trình duyệt đang chặn lưu dữ liệu.");
+      dialogError("pw-error", null);
+      $("password-form").reset();
+      $("pw-ok").textContent = "Đã đổi mật khẩu.";
+    } catch { dialogError("pw-error", "Chưa đổi được mật khẩu. Vui lòng thử lại."); }
+  }
+
+  async function onDeleteAccount(e) {
+    e.preventDefault();
+    const acc = loadAccounts().find((a) => a.id === me.id);
+    if (!acc) return dialogError("del-error", "Không tìm thấy tài khoản này trên máy.");
+    try {
+      if (!(await checkPassword(acc, $("del-pass").value))) return dialogError("del-error", "Mật khẩu không đúng.");
+      saveAccounts(loadAccounts().filter((a) => a.id !== acc.id));
+      try { localStorage.removeItem(dataKey); localStorage.removeItem(themeKey); } catch { /* ignore */ }
+      clearSession();
+      location.reload();
+    } catch { dialogError("del-error", "Chưa xóa được tài khoản. Vui lòng thử lại."); }
+  }
+
+  function signOut() { flushNotes(); clearSession(); location.reload(); }
+
+  function wireAuth() {
+    $("login-form").addEventListener("submit", onLogin);
+    $("signup-form").addEventListener("submit", onSignup);
+    $("auth-switch").addEventListener("click", (e) => { const b = e.target.closest("[data-mode]"); if (b) setAuthMode(b.dataset.mode); });
+    $("acct-chips").addEventListener("click", (e) => { const b = e.target.closest(".chip"); if (!b) return; $("login-name").value = b.dataset.name; $("login-pass").focus(); });
+    for (const [btn, input] of [["toggle-login-pass", "login-pass"], ["toggle-signup-pass", "signup-pass"]]) {
+      $(btn).addEventListener("click", () => {
+        const input$ = $(input), show = input$.type === "password";
+        input$.type = show ? "text" : "password";
+        $(btn).setAttribute("aria-pressed", String(show));
+        $(btn).setAttribute("aria-label", show ? "Ẩn mật khẩu" : "Hiện mật khẩu");
+        $(btn).innerHTML = show ? ICON.eyeOff : ICON.eye;
+      });
+    }
+    $("account-btn").addEventListener("click", openAccount);
+    $("account-close").addEventListener("click", () => acctDialog().close());
+    $("logout-btn").addEventListener("click", signOut);
+    $("remember-toggle").addEventListener("change", (e) => { if (me && !writeSession(me.id, e.target.checked)) e.target.checked = !e.target.checked; else if (me) savePref(e.target.checked, me.name); });
+    $("password-form").addEventListener("submit", onChangePassword);
+    $("delete-form").addEventListener("submit", onDeleteAccount);
+  }
+
+  function initAuth() {
+    wireAuth();
+    const s = readSession();
+    const acc = s && loadAccounts().find((a) => a.id === s.id);
+    if (acc) { enterApp(acc); return; }
+    if (s) clearSession();
+    showAuth();
+  }
+
   // ---- State ----
   const S = { monday: mondayOf(nowVN().date), week: blankWeek(), prev: null, selected: nowVN().date, loading: true, now: nowVN(), theme: "system", editing: null };
   const ICON = {
@@ -1513,6 +2282,8 @@ body::before {
     sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
     moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
     check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.5 0 8.3 2.9 9.94 7a10.8 10.8 0 0 1-1.67 2.68M6.61 6.61A10.77 10.77 0 0 0 2.06 12c1.64 4.1 5.44 7 9.94 7a10.4 10.4 0 0 0 5.39-1.61M2 2l20 20M9.88 9.88a3 3 0 1 0 4.24 4.24"/></svg>',
     alert: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
   };
   const CHECKBOX = '<svg viewBox="0 0 22 22" aria-hidden="true" focusable="false"><path class="ck-box" d="M3.4 4.3c4.5-.9 10-1.1 15-.4.6 4.5.5 9.3.1 13.8-4.9.7-10 .6-14.9.1-.6-4.5-.7-9.1-.2-13.5z"/><path class="ck-mark" pathLength="1" d="M5.8 11.4c1.5 1.1 2.7 2.4 3.6 4.1 2.1-4.5 5-8.1 8.7-11"/></svg>';
@@ -1565,7 +2336,7 @@ body::before {
       ? "Kế hoạch lưu riêng trong tài khoản claude.ai của bạn, mở trên điện thoại hay máy tính đều thấy giống nhau. Người khác mở trang này chỉ thấy kế hoạch của chính họ."
       : store.kind === "local"
         ? STANDALONE
-          ? "Kế hoạch lưu trong trình duyệt của máy này: mỗi người mở trên máy của mình sẽ có kế hoạch riêng. Hãy tải bản sao lưu thường xuyên; muốn chuyển sang máy khác thì nhập file đó vào."
+          ? "Kế hoạch của tài khoản này lưu trong trình duyệt của máy này, không gửi đi đâu. Điện thoại và máy tính không tự đồng bộ: hãy tải bản sao lưu thường xuyên, muốn chuyển sang máy khác thì nhập file đó vào."
           : "Kế hoạch đang lưu trong trình duyệt này."
         : "";
   }
@@ -1827,7 +2598,7 @@ body::before {
     S.theme = isDark() ? "light" : "dark";
     applyTheme(S.theme);
     if (store.kind === "db") queueWrite("settings", { theme: S.theme });
-    else try { localStorage.setItem(THEME_KEY, S.theme); } catch { /* keeps working for this visit */ }
+    else try { localStorage.setItem(themeKey, S.theme); } catch { /* keeps working for this visit */ }
   }
 
   // ---- Backup files ----
@@ -2042,6 +2813,7 @@ body::before {
     buildDays();
     wire();
     renderThemeButton();
+    if (STANDALONE) { initAuth(); return; }
     openWeek(S.monday); // first paint: an empty, loading week
     let db = null, id = null;
     try {
@@ -2054,11 +2826,10 @@ body::before {
     if (db && id) { store.kind = "db"; store.col = db.collection("data/users/" + id); }
     else store.kind = "local";
     try {
-      const saved = store.kind === "db" ? (await readDoc("settings"))?.theme : localStorage.getItem(THEME_KEY);
+      const saved = store.kind === "db" ? (await readDoc("settings"))?.theme : localStorage.getItem(themeKey);
       if (saved === "light" || saved === "dark") { S.theme = saved; applyTheme(saved); }
     } catch { /* default theme */ }
     openWeek(S.monday);
-    if (STANDALONE) { $("export-btn").hidden = false; return; }
     try {
       const downloads = await window.claude.use("downloads");
       if (downloads) { store.downloads = downloads; $("export-btn").hidden = false; }
