@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kế hoạch tuần của tôi</title>
+<style>
+:root{--bg:#f4f4f1;--card:#fcfcfb;--fg:#0b0b0b;--fg2:#6b6963;--line:#e1e0d9;--accent:#2a78d6;--done:#0ca30c;--late:#d03b3b;--soft:#e4eefb}
+@media(prefers-color-scheme:dark){:root{--bg:#0d0d0d;--card:#1a1a19;--fg:#f0efec;--fg2:#a8a69e;--line:#2c2c2a;--accent:#3987e5;--done:#0ca30c;--late:#e05252;--soft:#1d3557}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1200px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+h1{font-size:22px;margin:0 auto 0 0}
+button,input,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;cursor:pointer}
+button:hover{background:var(--soft)}
+.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.title{font-weight:600;min-width:200px;text-align:center}
+.bar{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin:6px 0 14px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.bar.full i{background:var(--done)}
+.summary{color:var(--fg2);margin:0}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.day{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 3px var(--soft)}
+.day h2{font-size:14px;margin:0;display:flex;justify-content:space-between}
+.day h2 small{color:var(--fg2);font-weight:400}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+li{display:flex;gap:6px;align-items:flex-start;padding:4px;border-radius:8px}
+li:hover{background:var(--soft)}
+li input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--done)}
+li .t{flex:1;word-break:break-word}
+li.done .t{text-decoration:line-through;color:var(--fg2)}
+li.late .t{color:var(--late)}
+li time{color:var(--fg2);font-size:12px;display:block}
+li .x{border:0;background:none;padding:0 4px;color:var(--fg2)}
+form{display:flex;gap:4px;flex-wrap:wrap}
+form input[type=text]{flex:1 1 100%;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 8px}
+form input[type=time]{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:4px}
+form button{padding:6px 10px}
+.notes{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px}
+.notes textarea{width:100%;min-height:80px;border:0;background:transparent;resize:vertical;outline:none}
+footer{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;color:var(--fg2);font-size:13px;align-items:center}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>📅 Kế hoạch tuần của tôi</h1>
+    <button id="prev" aria-label="Tuần trước">‹</button>
+    <div class="title" id="title" aria-live="polite"></div>
+    <button id="next" aria-label="Tuần sau">›</button>
+    <button id="now">Tuần này</button>
+  </header>
+  <p class="summary" id="summary"></p>
+  <div class="bar" id="bar"><i></i></div>
+  <div class="grid" id="grid"></div>
+  <section class="notes">
+    <strong>Ghi chú / mục tiêu của tuần</strong>
+    <textarea id="notes" placeholder="Tuần này mình muốn đạt được gì?"></textarea>
+  </section>
+  <footer>
+    <button id="export">Tải bản sao lưu</button>
+    <button id="import">Nhập từ file</button>
+    <input id="file" type="file" accept="application/json" hidden>
+    <span>Dữ liệu chỉ lưu trong trình duyệt này. Hãy tải bản sao lưu định kỳ.</span>
+  </footer>
+</main>
+<script>
+const KEY = "ke-hoach-tuan-v1";
+const DAYS = ["Thứ Hai","Thứ Ba","Thứ Tư","Thứ Năm","Thứ Sáu","Thứ Bảy","Chủ Nhật"];
+let data = load();
+let monday = mondayOf(new Date());
+
+function load(){ try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.tasks) return d; } catch {} return { tasks: {}, notes: {} }; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { alert("Không lưu được dữ liệu (trình duyệt đang chặn bộ nhớ)."); } }
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+function mondayOf(d){ const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x; }
+const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const fmt = d => `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}`;
+
+function render(){
+  const grid = document.getElementById("grid"); grid.replaceChildren();
+  const todayIso = iso(new Date()), nowMin = new Date().getHours()*60 + new Date().getMinutes();
+  let total = 0, done = 0;
+  for (let i = 0; i < 7; i++){
+    const d = addDays(monday, i), key = iso(d), list = (data.tasks[key] ||= []);
+    const day = el("section", "day" + (key === todayIso ? " today" : ""));
+    const h = el("h2"); h.append(DAYS[i], el("small", "", fmt(d))); day.append(h);
+    const ul = el("ul");
+    list.sort((a,b) => (a.time||"99:99").localeCompare(b.time||"99:99"));
+    for (const t of list){
+      total++; if (t.done) done++;
+      const late = !t.done && (key < todayIso || (key === todayIso && t.time && toMin(t.time) < nowMin));
+      const li = el("li", (t.done ? "done " : "") + (late ? "late" : ""));
+      const cb = el("input"); cb.type = "checkbox"; cb.checked = t.done; cb.ariaLabel = t.text;
+      cb.onchange = () => { t.done = cb.checked; save(); render(); };
+      const box = el("div", "t"); box.append(document.createTextNode(t.text));
+      if (t.time){ const tm = el("time", "", t.time); box.append(tm); }
+      const x = el("button", "x", "✕"); x.title = "Xóa"; x.ariaLabel = "Xóa " + t.text;
+      x.onclick = () => { if (confirm(`Xóa "${t.text}"?`)){ data.tasks[key] = list.filter(y => y !== t); save(); render(); } };
+      li.append(cb, box, x); ul.append(li);
+    }
+    day.append(ul);
+    const f = el("form"), txt = el("input"), tm = el("input"), add = el("button", "", "+");
+    txt.type = "text"; txt.placeholder = "Thêm việc…"; txt.maxLength = 200; txt.ariaLabel = "Việc mới " + DAYS[i];
+    tm.type = "time"; tm.ariaLabel = "Giờ"; add.type = "submit"; add.ariaLabel = "Thêm";
+    f.onsubmit = e => { e.preventDefault(); const v = txt.value.trim(); if (!v) return; list.push({ id: uid(), text: v, time: tm.value || "", done: false }); save(); render(); };
+    f.append(txt, tm, add); day.append(f); grid.append(day);
+  }
+  const end = addDays(monday, 6);
+  document.getElementById("title").textContent = `${fmt(monday)} – ${fmt(end)}/${end.getFullYear()}`;
+  document.getElementById("summary").textContent = total ? `Đã xong ${done}/${total} việc (${Math.round(done/total*100)}%)` : "Chưa có việc nào trong tuần này.";
+  const bar = document.getElementById("bar"); bar.classList.toggle("full", total > 0 && done === total);
+  bar.firstElementChild.style.width = total ? done/total*100 + "%" : "0";
+  document.getElementById("notes").value = data.notes[iso(monday)] || "";
+}
+function el(tag, cls = "", text = ""){ const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+function toMin(t){ const [h,m] = t.split(":").map(Number); return h*60 + m; }
+
+document.getElementById("prev").onclick = () => { monday = addDays(monday, -7); render(); };
+document.getElementById("next").onclick = () => { monday = addDays(monday, 7); render(); };
+document.getElementById("now").onclick = () => { monday = mondayOf(new Date()); render(); };
+document.getElementById("notes").oninput = e => { data.notes[iso(monday)] = e.target.value; save(); };
+document.getElementById("export").onclick = () => {
+  const a = el("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  a.download = `ke-hoach-${iso(new Date())}.json`; a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("import").onclick = () => document.getElementById("file").click();
+document.getElementById("file").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || typeof d.tasks !== "object" || typeof d.notes !== "object") throw 0;
+    if (!confirm("Thay toàn bộ dữ liệu hiện tại bằng nội dung file này?")) return;
+    data = d; save(); render();
+  } catch { alert("File không đúng định dạng sao lưu."); }
+};
+// Refresh "late" marks every minute, but never while you are typing.
+setInterval(() => { if (!/INPUT|TEXTAREA/.test(document.activeElement?.tagName || "")) render(); }, 60000);
+render();
+</script>
+</body>
+</html>
