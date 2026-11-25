@@ -1414,6 +1414,11 @@ body::before {
   display: none !important;
 }
 
+.remember {
+  display: grid;
+  gap: 2px;
+}
+
 .btn-block {
   width: 100%;
   min-height: 46px;
@@ -1645,6 +1650,277 @@ html.standalone:not(.signed-in) body::before {
   margin-bottom: 10px;
 }
 
+/* ---------- View switch and day plan ---------- */
+
+.view-switch {
+  display: inline-grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--sheet);
+}
+
+.view-switch button {
+  min-width: 84px;
+  min-height: 38px;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  font-weight: 600;
+}
+
+.view-switch button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.day-open {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.day-open:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.day-open svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.day-head {
+  gap: 4px;
+}
+
+.day-head h2 {
+  margin-right: auto;
+}
+
+.dayplan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "summary" "add" "untimed" "timeline";
+  gap: 18px;
+}
+
+.dv-head { grid-area: head; display: grid; gap: 10px; }
+.dv-summary { grid-area: summary; display: grid; gap: 10px; }
+.dv-add { grid-area: add; }
+.dv-untimed { grid-area: untimed; }
+.dv-timeline { grid-area: timeline; }
+
+.dv-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "title title" "start end" "btn btn";
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+}
+
+.dv-add-title { grid-area: title; }
+.dv-add .field:nth-of-type(1) { grid-area: start; }
+.dv-add .field:nth-of-type(2) { grid-area: end; }
+.dv-add-btn { grid-area: btn; }
+
+.dv-untimed,
+.dv-timeline {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
+}
+
+.dv-untimed {
+  padding: 14px 16px 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+}
+
+.dv-untimed h2,
+.dv-timeline h2 {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+@media (min-width: 900px) {
+  .dayplan {
+    grid-template-columns: 340px minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas: "head timeline" "summary timeline" "add timeline" "untimed timeline";
+    align-items: start;
+    column-gap: 32px;
+  }
+  .dv-add {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.tl {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  padding: 12px 0 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--sheet);
+  box-shadow: var(--shadow-sheet);
+  overflow: hidden;
+}
+
+.tl-hours {
+  position: relative;
+}
+
+.tl-hours span {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  color: var(--ink-2);
+  font: 400 12px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tl-track {
+  position: relative;
+  margin: 0 12px 0 0;
+  padding: 0;
+  list-style: none;
+  background: repeating-linear-gradient(to bottom, var(--rule) 0 1px, transparent 1px 64px);
+  border-left: 1px solid var(--rule);
+}
+
+.tl-item {
+  position: absolute;
+  top: var(--top);
+  left: calc(var(--col) * 100% / var(--cols) + 4px);
+  width: calc(100% / var(--cols) - 8px);
+  height: var(--h);
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: start;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 3px 4px 3px 2px;
+  border: 1px solid var(--ink);
+  border-left-width: 4px;
+  border-radius: var(--r-sm);
+  background: var(--sheet);
+  box-shadow: 0 1px 0 var(--rule);
+}
+
+.tl-item .check {
+  width: 30px;
+  height: 30px;
+}
+
+.tl-item .check svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tl-main {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  padding: 1px 2px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.tl-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
+.tl-title > span {
+  margin: 0 -3px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background: linear-gradient(var(--hl), var(--hl)) no-repeat 0 60% / 0% 80%;
+  transition: background-size var(--t-slow) var(--ease), color var(--t-mid);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.tl-time {
+  color: var(--ink-2);
+  font: 400 12px/1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tl-item .ck-box { stroke: var(--ink-2); stroke-width: 1.6; transition: stroke var(--t-fast); }
+.tl-item .check:hover .ck-box,
+.tl-item[data-status="done"] .ck-box { stroke: var(--ink); }
+.tl-item .ck-mark { stroke: var(--ink); stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--t-slow) var(--ease); }
+.tl-item[data-status="done"] .ck-mark { stroke-dashoffset: 0; }
+.tl-item[data-status="done"] .tl-title > span { background-size: 100% 80%; color: var(--hl-ink); }
+.tl-item[data-status="done"] { border-color: var(--rule); border-left-color: var(--ok); }
+.tl-item[data-status="late"] { border-color: var(--late); }
+.tl-item[data-status="late"] .tl-time { color: var(--late); }
+
+.tl-now {
+  position: absolute;
+  left: -1px;
+  right: 0;
+  height: 0;
+  border-top: 2px solid var(--late);
+  pointer-events: none;
+}
+
+.tl-hours .tl-now-label {
+  right: 4px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: var(--late);
+  color: var(--paper);
+  font-size: 11px;
+}
+
+@media (max-width: 480px) {
+  .tl {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+  .tl-hours span {
+    right: 6px;
+    font-size: 11px;
+  }
+  .tl-track {
+    margin-right: 8px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1734,6 +2010,10 @@ html.standalone:not(.signed-in) body::before {
 </header>
 <main class="page" id="main">
   <p class="mode-note" id="mode-note" hidden></p>
+  <div class="view-switch" role="group" aria-label="Chế độ xem">
+    <button type="button" id="view-week" aria-pressed="true">Tuần</button>
+    <button type="button" id="view-day" aria-pressed="false">Ngày</button>
+  </div>
   <div class="week" id="week">
     <div class="w-nav">
       <p class="eyebrow" id="w-eyebrow"></p>
@@ -1784,6 +2064,45 @@ html.standalone:not(.signed-in) body::before {
       <p class="hint store-note" id="store-note"></p>
     </section>
   </div>
+
+  <section class="dayplan" id="day-view" aria-labelledby="dv-title" hidden>
+    <div class="dv-head">
+      <div class="dv-heading">
+        <p class="eyebrow" id="dv-eyebrow"></p>
+        <h1 class="w-title" id="dv-title"></h1>
+      </div>
+      <div class="w-nav-buttons">
+        <button type="button" class="icon-btn" id="dv-prev" aria-label="Ngày trước"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button type="button" class="btn btn-ghost" id="dv-today">Hôm nay</button>
+        <button type="button" class="icon-btn" id="dv-next" aria-label="Ngày sau"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+    <section class="dv-summary" aria-label="Tiến độ trong ngày">
+      <div class="pg-top">
+        <span class="pg-percent"><span id="dv-num">0</span><small>%</small></span>
+        <span class="pg-count" id="dv-count"></span>
+      </div>
+      <div class="pg-bar" id="dv-bar" role="progressbar" aria-label="Tiến độ trong ngày" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+    </section>
+    <form class="dv-add" id="dv-add" autocomplete="off" aria-label="Thêm việc vào ngày này">
+      <input class="input dv-add-title" id="dv-add-title" name="title" maxlength="200" aria-label="Tên việc mới">
+      <div class="field"><label class="field-label" for="dv-add-start">Bắt đầu</label><input class="input" id="dv-add-start" name="start" type="time"></div>
+      <div class="field"><label class="field-label" for="dv-add-end">Kết thúc</label><input class="input" id="dv-add-end" name="end" type="time"></div>
+      <button type="submit" class="btn btn-primary dv-add-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>Thêm</button>
+    </form>
+    <section class="dv-untimed" id="dv-untimed-wrap" aria-labelledby="dv-untimed-title" hidden>
+      <h2 id="dv-untimed-title">Chưa có giờ</h2>
+      <ul class="tasks" id="dv-untimed"></ul>
+    </section>
+    <section class="dv-timeline" aria-labelledby="dv-timeline-title">
+      <h2 id="dv-timeline-title">Dòng thời gian</h2>
+      <p class="hint" id="dv-empty" hidden>Chưa có việc nào có giờ. Thêm việc kèm giờ bắt đầu và kết thúc để xếp thành các khối trong ngày.</p>
+      <div class="tl">
+        <div class="tl-hours" id="dv-hours" aria-hidden="true"></div>
+        <ul class="tl-track" id="dv-track"></ul>
+      </div>
+    </section>
+  </section>
 </main>
 
 <dialog class="sheet-dialog" id="edit-dialog" aria-labelledby="edit-task-title">
@@ -2276,9 +2595,12 @@ html.standalone:not(.signed-in) body::before {
   }
 
   // ---- State ----
-  const S = { monday: mondayOf(nowVN().date), week: blankWeek(), prev: null, selected: nowVN().date, loading: true, now: nowVN(), theme: "system", editing: null };
+  const VIEW_KEY = "ai-planner-view";
+  function readView() { try { return localStorage.getItem(VIEW_KEY) === "day" ? "day" : "week"; } catch { return "week"; } }
+  const S = { monday: mondayOf(nowVN().date), week: blankWeek(), prev: null, selected: nowVN().date, loading: true, now: nowVN(), theme: "system", editing: null, view: readView() };
   const ICON = {
     plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
     sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
     moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
     check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
@@ -2299,7 +2621,7 @@ html.standalone:not(.signed-in) body::before {
       sec.className = "day";
       sec.setAttribute("aria-labelledby", "day-h-" + i);
       sec.innerHTML =
-        `<header class="day-head"><h2 id="day-h-${i}"></h2><span class="day-count"></span></header><div class="day-body"></div>` +
+        `<header class="day-head"><h2 id="day-h-${i}"></h2><span class="day-count"></span><button type="button" class="day-open" data-act="open-day" aria-label="Xem kế hoạch ngày ${DAY_NAMES[i]}" title="Xem kế hoạch ngày">${ICON.clock}</button></header><div class="day-body"></div>` +
         `<button type="button" class="btn btn-ghost add-toggle">${ICON.plus}Thêm việc</button>` +
         `<form class="add" autocomplete="off" aria-label="Thêm việc cho ${DAY_NAMES[i]}">` +
         `<input class="input add-title" name="title" placeholder="Thêm việc…" maxlength="200" aria-label="Tên việc mới, ${DAY_NAMES[i]}">` +
@@ -2330,6 +2652,7 @@ html.standalone:not(.signed-in) body::before {
     if (document.activeElement !== notes && !notesDirty) notes.value = S.week.notes;
     goal.disabled = notes.disabled = S.loading;
     $("week").setAttribute("aria-busy", String(S.loading));
+    applyView();
     $("mode-note").hidden = !modeNote;
     $("mode-note").textContent = modeNote;
     $("store-note").textContent = store.kind === "db"
@@ -2355,6 +2678,14 @@ html.standalone:not(.signed-in) body::before {
     $("pg-prev").textContent = !p ? "Đang xem tuần trước…" : p.total ? `Tuần trước: ${Math.round((p.done / p.total) * 100)}% (${p.done}/${p.total} việc)` : "Tuần trước chưa có việc nào";
   }
 
+  function taskRow(date, t, now) {
+    const st = status(date, t, now), time = timeText(t), label = st !== "upcoming" || date === now.date ? LABEL[st] : "";
+    return `<li class="task" data-status="${st}" data-id="${esc(t.id)}">` +
+      `<button type="button" class="check" aria-pressed="${t.done}" aria-label="Đã xong: ${esc(t.text)}">${CHECKBOX}</button>` +
+      `<button type="button" class="task-main" aria-label="Sửa việc: ${esc(t.text)}${time ? ", " + time : ""}"><span class="task-title"><span>${esc(t.text)}</span></span>${time ? `<span class="task-time">${time}</span>` : ""}</button>` +
+      `<span class="task-status">${label}</span></li>`;
+  }
+
   function renderDay(i, date) {
     const el = dayEls[i], now = S.now, today = date === now.date;
     const list = (S.week.days[date] || []).slice().sort(byTime);
@@ -2368,13 +2699,7 @@ html.standalone:not(.signed-in) body::before {
     if (!list.length) {
       el.body.innerHTML = `<p class="day-empty">${S.loading ? "Đang tải…" : today ? "Hôm nay chưa có việc nào. Thêm việc đầu tiên ở bên dưới." : "Chưa có việc nào."}</p>`;
     } else {
-      el.body.innerHTML = `<ul class="tasks">${list.map((t) => {
-        const st = status(date, t, now), time = timeText(t), label = st !== "upcoming" || today ? LABEL[st] : "";
-        return `<li class="task" data-status="${st}" data-id="${esc(t.id)}">` +
-          `<button type="button" class="check" aria-pressed="${t.done}" aria-label="Đã xong: ${esc(t.text)}">${CHECKBOX}</button>` +
-          `<button type="button" class="task-main" aria-label="Sửa việc: ${esc(t.text)}${time ? ", " + time : ""}"><span class="task-title"><span>${esc(t.text)}</span></span>${time ? `<span class="task-time">${time}</span>` : ""}</button>` +
-          `<span class="task-status">${label}</span></li>`;
-      }).join("")}</ul>`;
+      el.body.innerHTML = `<ul class="tasks">${list.map((t) => taskRow(date, t, now)).join("")}</ul>`;
     }
     el.toggle.hidden = el.open;
     el.form.toggleAttribute("data-open", el.open);
@@ -2405,14 +2730,14 @@ html.standalone:not(.signed-in) body::before {
 
   // ---- Week loading: live updates from the viewer's own document ----
   let unsub = null, openToken = 0;
-  function openWeek(monday) {
+  function openWeek(monday, selected) {
     flushNotes();
     if (unsub) { unsub(); unsub = null; }
     S.monday = monday;
     S.week = blankWeek();
     S.prev = null;
     const today = S.now.date;
-    S.selected = mondayOf(today) === monday ? today : monday;
+    S.selected = selected && mondayOf(selected) === monday ? selected : mondayOf(today) === monday ? today : monday;
     for (const el of dayEls) { el.open = false; el.form.reset(); }
     const token = ++openToken, key = weekKey(monday);
     setSaveState("saved");
@@ -2473,20 +2798,27 @@ html.standalone:not(.signed-in) body::before {
     }
   }
 
+  /** The visible row or timeline block of a task, in whichever view is open. */
+  function rowEl(date, id) {
+    const scope = S.view === "day" ? $("day-view") : document.querySelector(`.day[data-date="${date}"]`);
+    return scope ? scope.querySelector(`[data-id="${CSS.escape(id)}"]`) : null;
+  }
+
   function toggle(date, id) {
     const found = findTask(date, id);
     if (!found) return;
     found.t.done = !found.t.done;
     commit();
-    const row = document.querySelector(`.day[data-date="${date}"] .task[data-id="${CSS.escape(id)}"]`);
+    const row = rowEl(date, id);
     if (row && found.t.done) { row.dataset.status = "upcoming"; void row.offsetWidth; row.dataset.status = "done"; }
     row?.querySelector(".check")?.focus();
   }
 
-  function add(date, text, time) {
+  function add(date, text, time, end = "") {
     const list = (S.week.days[date] ||= []);
     if (list.length >= MAX_PER_DAY) { showToast(`Mỗi ngày có tối đa ${MAX_PER_DAY} việc.`, { error: true }); return false; }
-    list.push({ id: uid(), text: text.slice(0, 200), time: TIME_RE.test(time) ? time : "", end: "", done: false });
+    const start = TIME_RE.test(time) ? time : "";
+    list.push({ id: uid(), text: text.slice(0, 200), time: start, end: start && TIME_RE.test(end) && toMin(end) > toMin(start) ? end : "", done: false });
     commit();
     return true;
   }
@@ -2528,8 +2860,8 @@ html.standalone:not(.signed-in) body::before {
     const r = returnFocus;
     returnFocus = null;
     if (!r) return;
-    const target = document.querySelector(`.day[data-date="${r.date}"] .task[data-id="${CSS.escape(r.id)}"] .task-main`);
-    (target || document.querySelector(`.day[data-date="${r.date}"] .add-title`) || $("w-title")).focus?.();
+    const target = rowEl(r.date, r.id)?.querySelector(".task-main, .tl-main");
+    (target || (S.view === "day" ? $("dv-add-title") : document.querySelector(`.day[data-date="${r.date}"] .add-title`)) || $("w-title")).focus?.();
   });
   $("edit-close").addEventListener("click", () => dialog.close());
   $("edit-cancel").addEventListener("click", () => dialog.close());
@@ -2574,6 +2906,131 @@ html.standalone:not(.signed-in) body::before {
     S.week.goal = $("week-goal").value.slice(0, 300);
     S.week.notes = $("week-notes").value.slice(0, 5000);
     queueWrite(weekKey(S.monday), clone(S.week));
+  }
+
+  // ---- Day plan ("Ngày"): one day with a timeline by hour ----
+  const PX_PER_HOUR = 64;
+  const MIN_SHOWN = 40; // a block is drawn at least this many minutes tall, so its text fits
+  const EMPTY_FROM = 7, EMPTY_TO = 21, MIN_SPAN = 8; // hours shown with no tasks / at least
+
+  function setView(view) {
+    S.view = view;
+    try { localStorage.setItem(VIEW_KEY, view); } catch { /* remembered next time if allowed */ }
+    render();
+    (view === "day" ? $("dv-title") : $("w-title")).scrollIntoView({ block: "nearest" });
+  }
+
+  function applyView() {
+    const day = S.view === "day";
+    $("week").hidden = day;
+    $("day-view").hidden = !day;
+    for (const [id, v] of [["view-week", "week"], ["view-day", "day"]]) $(id).setAttribute("aria-pressed", String(S.view === v));
+    if (day) renderDayView();
+  }
+
+  function goDay(date) {
+    const m = mondayOf(date);
+    if (m === S.monday) { S.selected = date; render(); } else openWeek(m, date);
+  }
+
+  /** Places timed tasks side by side when they overlap. */
+  function layoutTimed(timed) {
+    const items = timed
+      .map((t) => { const s = toMin(t.time), e = t.end ? toMin(t.end) : s + 60; return { t, s, e, de: Math.max(e, s + MIN_SHOWN), col: 0, cols: 1 }; })
+      .sort((a, b) => a.s - b.s || a.de - b.de);
+    const out = [];
+    let cluster = [], colEnds = [], clusterEnd = -1;
+    const flush = () => { const cols = Math.max(1, colEnds.length); for (const it of cluster) it.cols = cols; out.push(...cluster); cluster = []; colEnds = []; clusterEnd = -1; };
+    for (const it of items) {
+      if (cluster.length && it.s >= clusterEnd) flush();
+      let c = colEnds.findIndex((end) => end <= it.s);
+      if (c < 0) { c = colEnds.length; colEnds.push(0); }
+      colEnds[c] = it.de;
+      it.col = c;
+      cluster.push(it);
+      clusterEnd = Math.max(clusterEnd, it.de);
+    }
+    flush();
+    return out;
+  }
+
+  const hh = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+
+  function renderDayView() {
+    const date = S.selected, now = S.now, today = date === now.date;
+    const list = (S.week.days[date] || []).slice().sort(byTime);
+    const timed = list.filter((t) => t.time), untimed = list.filter((t) => !t.time);
+    const done = list.filter((t) => t.done).length, late = list.filter((t) => status(date, t, now) === "late").length;
+    const pct = list.length ? Math.round((done / list.length) * 100) : 0;
+
+    $("dv-eyebrow").textContent = `Tuần ${isoWeek(date)} · ${date.slice(0, 4)}${today ? " · Hôm nay" : ""}`;
+    $("dv-title").textContent = `${DAY_NAMES[weekdayIndex(date)]}, ${dm(date)}`;
+    $("dv-today").disabled = today;
+    $("dv-num").textContent = String(pct);
+    $("dv-count").textContent = S.loading ? "Đang tải…" : list.length ? `${done}/${list.length} việc đã xong${late ? `, ${late} việc trễ` : ""}` : "Ngày này chưa có việc nào";
+    const bar = $("dv-bar");
+    bar.setAttribute("aria-valuenow", String(pct));
+    bar.toggleAttribute("data-full", list.length > 0 && done === list.length);
+    bar.firstElementChild.style.width = pct + "%";
+    $("dv-add-title").placeholder = `Thêm việc cho ${DAY_NAMES[weekdayIndex(date)]}…`;
+
+    // "No time" list
+    $("dv-untimed-wrap").hidden = !untimed.length;
+    $("dv-untimed").innerHTML = untimed.map((t) => taskRow(date, t, now)).join("");
+
+    // Timeline
+    const placed = layoutTimed(timed);
+    // Show the tasks with an hour of margin, so a day with only an evening task is not 14 empty hours.
+    let from = EMPTY_FROM, to = EMPTY_TO;
+    if (placed.length) {
+      from = Math.max(0, Math.floor(Math.min(...placed.map((it) => it.s)) / 60) - 1);
+      to = Math.min(24, Math.ceil(Math.max(...placed.map((it) => it.de)) / 60) + 1);
+    }
+    if (to - from < MIN_SPAN) { to = Math.min(24, from + MIN_SPAN); from = Math.max(0, to - MIN_SPAN); }
+    const height = (to - from) * PX_PER_HOUR;
+    const px = (min) => ((min - from * 60) * PX_PER_HOUR) / 60;
+    const track = $("dv-track");
+    track.style.height = height + "px";
+    $("dv-hours").style.height = height + "px";
+    const showNow = today && now.minutes >= from * 60 && now.minutes <= to * 60;
+    const nowTop = px(now.minutes);
+    // The current time sits in the hour column; the hour label right under it steps aside.
+    $("dv-hours").innerHTML = Array.from({ length: to - from + 1 }, (_, i) => i * PX_PER_HOUR)
+      .map((top, i) => (showNow && Math.abs(top - nowTop) < 11 ? "" : `<span style="top:${top}px">${String(from + i).padStart(2, "0")}:00</span>`)).join("")
+      + (showNow ? `<span class="tl-now-label" style="top:${nowTop.toFixed(1)}px">${hh(now.minutes)}</span>` : "");
+    track.innerHTML = placed.map((it) => {
+      const t = it.t, st = status(date, t, now), time = timeText(t);
+      const label = st === "late" ? "Trễ" : st === "done" ? "Xong" : "Sắp tới";
+      return `<li class="tl-item" data-status="${st}" data-id="${esc(t.id)}" style="--top:${px(it.s).toFixed(1)}px;--h:${(((it.de - it.s) * PX_PER_HOUR) / 60 - 3).toFixed(1)}px;--col:${it.col};--cols:${it.cols}">` +
+        `<button type="button" class="check tl-check" aria-pressed="${t.done}" aria-label="Đã xong: ${esc(t.text)}">${CHECKBOX}</button>` +
+        `<button type="button" class="tl-main" aria-label="Sửa việc: ${esc(t.text)}, ${time}" title="${esc(t.text)}"><span class="tl-title"><span>${esc(t.text)}</span></span><span class="tl-time">${time}${st === "late" ? " · Trễ" : ""}</span></button>` +
+        `<span class="sr-only">Trạng thái: ${label}</span></li>`;
+    }).join("");
+    if (showNow) track.insertAdjacentHTML("beforeend", `<li class="tl-now" aria-hidden="true" style="top:${nowTop.toFixed(1)}px"></li>`);
+    $("dv-empty").hidden = timed.length > 0 || S.loading;
+  }
+
+  function wireDayView() {
+    $("view-week").addEventListener("click", () => setView("week"));
+    $("view-day").addEventListener("click", () => setView("day"));
+    $("dv-prev").addEventListener("click", () => goDay(addDays(S.selected, -1)));
+    $("dv-next").addEventListener("click", () => goDay(addDays(S.selected, 1)));
+    $("dv-today").addEventListener("click", () => goDay(S.now.date));
+    $("day-view").addEventListener("click", (e) => {
+      const item = e.target.closest("[data-id]");
+      if (!item) return;
+      if (e.target.closest(".check")) return toggle(S.selected, item.dataset.id);
+      if (e.target.closest(".task-main, .tl-main")) openEdit(S.selected, item.dataset.id);
+    });
+    $("dv-add").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const f = e.currentTarget, text = f.elements.title.value.trim(), start = f.elements.start.value, end = f.elements.end.value;
+      if (!text) return f.elements.title.focus();
+      const problem = timeProblem(start, end);
+      if (problem) return showToast(problem, { error: true });
+      if (add(S.selected, text, start, end)) f.reset();
+      f.elements.title.focus();
+    });
   }
 
   // ---- Light / dark ----
@@ -2744,6 +3201,7 @@ html.standalone:not(.signed-in) body::before {
     $("next-week").addEventListener("click", () => openWeek(addDays(S.monday, 7)));
     $("this-week").addEventListener("click", () => openWeek(mondayOf(S.now.date)));
     $("theme-btn").addEventListener("click", toggleTheme);
+    wireDayView();
     $("strip").addEventListener("click", (e) => {
       const b = e.target.closest(".strip-day");
       if (!b) return;
@@ -2758,6 +3216,7 @@ html.standalone:not(.signed-in) body::before {
       const row = e.target.closest(".task");
       if (e.target.closest(".check") && row) return toggle(date, row.dataset.id);
       if (e.target.closest(".task-main") && row) return openEdit(date, row.dataset.id);
+      if (e.target.closest(".day-open")) { S.selected = date; return setView("day"); }
       if (e.target.closest(".add-toggle")) {
         el.open = true;
         renderDay(Number(day.dataset.index), date);
@@ -2805,6 +3264,7 @@ html.standalone:not(.signed-in) body::before {
       if (S.now.date !== before) { render(); return; }
       weekDays(S.monday).forEach((d, i) => { if (!dayEls[i].root.contains(document.activeElement) || document.activeElement.classList.contains("input")) renderDay(i, d); });
       renderProgress();
+      if (S.view === "day" && !$("day-view").contains(document.activeElement)) renderDayView();
     }, 30000);
   }
 
